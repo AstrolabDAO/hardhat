@@ -1,25 +1,24 @@
 import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
-import { INetwork } from "./";
+import { INetwork } from "./types";
+import { networks } from "./networks.ts";
 
 dotenv.config({ override: true });
 tdly.setup({ automaticVerifications: true });
 
+if (!process.env?.TEST_MNEMONIC)
+  throw new Error("missing env.TEST_MNEMONIC");
+
 const accounts = {
   mnemonic: process.env?.TEST_MNEMONIC,
-  // accountsBalance: (BigInt(1e18) * 1_000_000n).toString(),
   // path: "m/44'/60'/0'/0",
   // initialIndex: 0,
   // count: 20,
-  // passphrase: "",
 };
 
-const networks = require("./networks.json")
+const hhNetworks = networks
   .reduce((acc: { [slug: string]: any }, network: INetwork) => {
 
-  if (!process.env?.TEST_MNEMONIC) {
-    throw new Error("missing env.TEST_MNEMONIC");
-  }
   acc[network.slug] = {
       url: network.httpRpcs[0],
       chainId: Number(network.id),
@@ -32,7 +31,7 @@ const networks = require("./networks.json")
 
 if (process.env.TENDERLY_FORK_ID) {
   // TODO: add support for multi forks / devNet
-  networks.tenderly = {
+  hhNetworks.tenderly = {
     url: `https://rpc.tenderly.co/fork/${process.env.TENDERLY_FORK_ID}`,
     chainId: Number(process.env.TENDERLY_CHAIN_ID) ?? 1,
     accounts
@@ -47,7 +46,7 @@ export default {
     sources: "./contracts",
     tests: "./test/integration"
   },
-  networks,
+  hhNetworks,
   tenderly: {
     username: process.env.TENDERLY_USER,
     project: process.env.TENDERLY_PROJECT,
