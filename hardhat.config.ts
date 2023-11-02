@@ -1,6 +1,3 @@
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-verify";
 import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./";
@@ -17,7 +14,7 @@ const accounts = {
   // passphrase: "",
 };
 
-const networks = require("./src/networks.json")
+const networks = require("./networks.json")
   .reduce((acc: { [slug: string]: any }, network: INetwork) => {
 
   if (!process.env?.TEST_MNEMONIC) {
@@ -34,6 +31,7 @@ const networks = require("./src/networks.json")
 });
 
 if (process.env.TENDERLY_FORK_ID) {
+  // TODO: add support for multi forks / devNet
   networks.tenderly = {
     url: `https://rpc.tenderly.co/fork/${process.env.TENDERLY_FORK_ID}`,
     chainId: Number(process.env.TENDERLY_CHAIN_ID) ?? 1,
