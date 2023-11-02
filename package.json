@@ -1,0 +1,38 @@
+{
+  "name": "@astrolabs/hardhat-config",
+  "version": "1.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "https://github.com/AstrolabFinance/hardhat-config",
+  "author": "Astrolab DAO <contact@astrolab.fi>",
+  "license": "MIT",
+  "description": "Astrolab Hardhat Config",
+  "keywords": [
+    "astrolab",
+    "ethereum",
+    "smart-contract"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc --build . && cp *.yaml ./dist",
+    "clean": "rm -rf node_modules && rm -rf dist"
+  },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.1.0",
+    "@tenderly/hardhat-tenderly": "^1.7.7",
+    "@types/mocha": "^10.0.3",
+    "hardhat": "^2.10.2",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.0"
+  }
+}
