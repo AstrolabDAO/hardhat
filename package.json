@@ -1,12 +1,12 @@
 {
-  "name": "@astrolabs/hardhat-config",
+  "name": "@astrolabs/hardhat",
   "version": "1.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/AstrolabFinance/hardhat-config",
+  "repository": "https://github.com/AstrolabFinance/hardhat",
   "author": "Astrolab DAO <contact@astrolab.fi>",
   "license": "MIT",
-  "description": "Astrolab Hardhat Config",
+  "description": "Astrolab Hardhat's boilerplate",
   "keywords": [
     "astrolab",
     "ethereum",
@@ -31,7 +31,6 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
-  "peerDependencies": {},
   "dependencies": {
     "dotenv": "^16.3.1",
     "ethers": "^5.7.0"
