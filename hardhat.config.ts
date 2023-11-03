@@ -7,7 +7,7 @@ import { networks } from "./networks";
 import { clearNetworkTypeFromSlug, toUpperSnake } from "./utils/format";
 
 dotenv.config({ override: true });
-tenderly.setup({ automaticVerifications: true });
+tenderly.setup({ automaticVerifications: false });
 
 if (!process.env?.TEST_MNEMONIC)
   throw new Error("missing env.TEST_MNEMONIC");
@@ -21,10 +21,11 @@ const accounts = {
 
 const [hhNetworks, scanKeys] = networks
   .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
+    const [networks, keys] = acc;
     const slug = clearNetworkTypeFromSlug(network.slug!);
     const varname = `${slug}-scan-api-key`;
     // combination of hh network and scan customChain objects for reusability
-    acc[0][network.slug] = {
+    networks[network.slug] = {
       network: network.slug,
       url: network.httpRpcs[0],
       urls: {
@@ -37,7 +38,7 @@ const [hhNetworks, scanKeys] = networks
     };
 
     // scan api keys
-    acc[1][network.slug] = process.env[varname];
+    keys[network.slug] = process.env[varname];
 
     // check for tenderly forks in .env
     if (network.slug.includes("mainnet")) {
@@ -45,7 +46,7 @@ const [hhNetworks, scanKeys] = networks
       const forkId = process.env[varname];
       if (forkId) {
         // TODO: add support for multi forks / devNet
-        acc[0][`${slug}-tenderly`] = {
+        networks[`${slug}-tenderly`] = {
           network: `${slug}-tenderly`,
           url: `https://rpc.tenderly.co/fork/${forkId}`,
           urls: {

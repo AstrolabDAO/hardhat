@@ -50,14 +50,13 @@ export async function deploy(d: IDeployable): Promise<Contract> {
   await contract.deployed?.();
   contract.target ??= contract.address;
   contract.address ??= contract.target;
-  // NB: below is only useful if tenderly is setup with automaticVerification=false
-  // if (d.verify) {
-  // await tenderly.verify({
-  //   name,
-  //   address: contract.target as string,
-  //   libraries: {}
-  // });
-  // }
+  if (d.verify) {
+    await tenderly.verify({
+      name: d.name,
+      address: contract.target as string,
+      libraries: d.libraries ?? {},
+    });
+  }
   return contract;
 }
 
