@@ -1,13 +1,13 @@
 export * from "@nomiclabs/hardhat-ethers";
 export * from "@nomiclabs/hardhat-etherscan";
-import * as tdly from "@tenderly/hardhat-tenderly";
+import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
 import { networks } from "./networks";
-import { clearNetworkTypeFromSlug, toUpperSnake } from "utils";
+import { clearNetworkTypeFromSlug, toUpperSnake } from "./utils";
 
 dotenv.config({ override: true });
-tdly.setup({ automaticVerifications: true });
+tenderly.setup({ automaticVerifications: true });
 
 if (!process.env?.TEST_MNEMONIC)
   throw new Error("missing env.TEST_MNEMONIC");
@@ -60,6 +60,7 @@ const [hhNetworks, scanKeys] = networks
     return acc;
   }, [{ hardhat: { accounts } }, {}]);
 
+export { tenderly };
 export default {
   solidity: "0.8.20",
   paths: {
