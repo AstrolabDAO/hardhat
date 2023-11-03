@@ -1,8 +1,8 @@
 import { BigNumber, Contract, Signer } from "ethers";
 import { ethers, tenderly, run } from "hardhat";
 import { Network } from "hardhat/types";
-import { IDeployable, INetwork } from "./types";
-import { getNetwork } from "./networks";
+import { IDeployable, INetwork } from "../types";
+import { getNetwork } from "../networks";
 import { isAlreadyVerified } from "@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService";
 
 
@@ -75,19 +75,3 @@ export const verify = async (address: string, constructorArguments=[]) =>
     address,
     constructorArguments,
   });
-
-// NB: the below functions are borrowed from monorepo/utils/format
-// these should be moved to a utils esm package
-export const shortenAddress = (address: string) =>
-  `${address.slice(0, 6)}...${address.slice(-4)}`;
-
-export const toUpperSnake = (s: string) => s
-    .replace(/([A-Z])/g, "_$1")
-    .replace(/-/g, "_")
-    .toUpperCase();
-
-export const clearFrom = (s: string, regex: string): string =>
-  s.substring(0, s.search(new RegExp(regex)));
-
-export const clearNetworkTypeFromSlug = (slug: string): string =>
-  clearFrom(slug, "-mainnet|-testnet");

@@ -4,7 +4,7 @@ import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
 import { networks } from "./networks";
-import { clearNetworkTypeFromSlug, toUpperSnake } from "./utils";
+import { clearNetworkTypeFromSlug, toUpperSnake } from "./utils/format";
 
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: true });
