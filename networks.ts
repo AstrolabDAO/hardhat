@@ -1,4 +1,4 @@
-import { INetwork } from "types";
+import { INetwork } from "./types";
 
 const networks: INetwork[] = require('./networks.json');
 networks.forEach(n => n.id = Number(n.id));

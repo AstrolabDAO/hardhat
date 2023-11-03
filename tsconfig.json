@@ -13,6 +13,6 @@
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true,
   },
-  "include": ["*.ts", "*.json", "*.yaml"],
+  "include": ["**/*.ts", "**/*.json", "**/*.yaml"],
   "exclude": ["node_modules", "dist", "cache", "artifacts", "deployments"]
 }

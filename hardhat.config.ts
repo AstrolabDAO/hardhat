@@ -1,7 +1,10 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
 import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
 import { networks } from "./networks.ts";
+import { clearNetworkTypeFromSlug, toUpperSnake } from "utils";
 
 dotenv.config({ override: true });
 tdly.setup({ automaticVerifications: true });
@@ -16,37 +19,56 @@ const accounts = {
   // count: 20,
 };
 
-const hhNetworks = networks
-  .reduce((acc: { [slug: string]: any }, network: INetwork) => {
-
-  acc[network.slug] = {
+const [hhNetworks, scanKeys] = networks
+  .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
+    const slug = clearNetworkTypeFromSlug(network.slug!);
+    const varname = `${slug}-scan-api-key`;
+    // combination of hh network and scan customChain objects for reusability
+    acc[0][network.slug] = {
+      network: network.slug,
       url: network.httpRpcs[0],
+      urls: {
+        apiURL: network.explorerApi
+          ?.replace("{key}", process.env[varname] ?? ""),
+        browserURL: network.explorers![0]
+      },
       chainId: Number(network.id),
       accounts
-  };
-  return acc;
-}, {
-    hardhat: { accounts }
-});
+    };
 
-if (process.env.TENDERLY_FORK_ID) {
-  // TODO: add support for multi forks / devNet
-  hhNetworks.tenderly = {
-    url: `https://rpc.tenderly.co/fork/${process.env.TENDERLY_FORK_ID}`,
-    chainId: Number(process.env.TENDERLY_CHAIN_ID) ?? 1,
-    accounts
-  };
-}
+    // scan api keys
+    acc[1][network.slug] = process.env[varname];
+
+    // check for tenderly forks in .env
+    if (network.slug.includes("mainnet")) {
+      const varname = `${slug}-tenderly-fork-id`;
+      const forkId = process.env[varname];
+      if (forkId) {
+        // TODO: add support for multi forks / devNet
+        acc[0][`${network.slug}-tenderly`] = {
+          network: `${network.slug}-tenderly`,
+          url: `https://rpc.tenderly.co/fork/${forkId}`,
+          urls: {
+            apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
+            browserURL: `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions`
+          },
+          chainId: Number(process.env[`${slug}-tenderly-chain-id`]) || network.id,
+          accounts
+        };
+      }
+    }
+    return acc;
+  }, [{ hardhat: { accounts } }, {}]);
 
 export default {
   solidity: "0.8.20",
   paths: {
     artifacts: "./artifacts",
     cache: "./cache",
-    sources: "./contracts",
-    tests: "./test/integration"
+    sources: process.env.CONTRACTS_DIR ?? "./contracts",
+    tests: process.env.CONTRACTS_TESTS_DIR ?? "./test/integration"
   },
-  hhNetworks,
+  networks: hhNetworks,
   tenderly: {
     username: process.env.TENDERLY_USER,
     project: process.env.TENDERLY_PROJECT,
@@ -55,5 +77,9 @@ export default {
   },
   mocha: {
     timeout: 1_200_000,
+  },
+  etherscan: {
+    customChains: hhNetworks,
+    apiKey: scanKeys
   },
 }; // as Partial<HardhatConfig>;
