@@ -3,7 +3,7 @@ import { ethers, tenderly, run } from "hardhat";
 import { Network } from "hardhat/types";
 import { IDeployable, INetwork } from "../types";
 import { getNetwork } from "../networks";
-import { isAlreadyVerified } from "@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService";
+// import { isAlreadyVerified } from "@nomiclabs/hardhat-etherscan/dist/etherscan/EtherscanService";
 
 
 export const getDeployer = async (): Promise<Signer> =>
@@ -61,13 +61,13 @@ export async function deploy(d: IDeployable): Promise<Contract> {
   return contract;
 }
 
-async function isVerified(
-  apiURL: string,
-  apiKey: string,
-  address: string
-): Promise<boolean> {
-  return await isAlreadyVerified(apiURL, apiKey, address);
-}
+// async function isVerified(
+//   apiURL: string,
+//   apiKey: string,
+//   address: string
+// ): Promise<boolean> {
+//   return await isAlreadyVerified(apiURL, apiKey, address);
+// }
 
 // cf. https://hardhat.org/hardhat-runner/plugins/nomicfoundation-hardhat-verify
 export const verify = async (address: string, constructorArguments=[]) =>
