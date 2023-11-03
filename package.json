@@ -1,6 +1,6 @@
 {
   "name": "@astrolabs/hardhat",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/AstrolabFinance/hardhat",

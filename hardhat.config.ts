@@ -45,8 +45,8 @@ const [hhNetworks, scanKeys] = networks
       const forkId = process.env[varname];
       if (forkId) {
         // TODO: add support for multi forks / devNet
-        acc[0][`${network.slug}-tenderly`] = {
-          network: `${network.slug}-tenderly`,
+        acc[0][`${slug}-tenderly`] = {
+          network: `${slug}-tenderly`,
           url: `https://rpc.tenderly.co/fork/${forkId}`,
           urls: {
             apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
@@ -60,8 +60,7 @@ const [hhNetworks, scanKeys] = networks
     return acc;
   }, [{ hardhat: { accounts } }, {}]);
 
-export { tenderly };
-export default {
+const config = {
   solidity: "0.8.20",
   paths: {
     artifacts: "./artifacts",
@@ -84,3 +83,5 @@ export default {
     apiKey: scanKeys
   },
 }; // as Partial<HardhatConfig>;
+
+export { tenderly, config };
