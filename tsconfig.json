@@ -10,9 +10,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "emitDeclarationOnly": true,
-    "allowImportingTsExtensions": true,
   },
-  "include": ["**/*.ts", "**/*.json", "**/*.yaml"],
+  "include": ["**/*.ts", "**/*.js", "**/*.json", "**/*.yaml"],
   "exclude": ["node_modules", "dist", "cache", "artifacts", "deployments"]
 }

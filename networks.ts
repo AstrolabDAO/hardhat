@@ -1,6 +1,6 @@
 import { INetwork } from "./types";
 
-const networks: INetwork[] = require('./networks.json');
+const networks: INetwork[] = require('./_networks.json');
 networks.forEach(n => n.id = Number(n.id));
 
 const [networkById, networkBySlug] = networks.reduce((acc, network) => {

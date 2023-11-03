@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-etherscan";
 import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
-import { networks } from "./networks.ts";
+import { networks } from "./networks";
 import { clearNetworkTypeFromSlug, toUpperSnake } from "utils";
 
 dotenv.config({ override: true });
