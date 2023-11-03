@@ -1,5 +1,5 @@
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
+export * from "@nomiclabs/hardhat-ethers";
+export * from "@nomiclabs/hardhat-etherscan";
 import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
