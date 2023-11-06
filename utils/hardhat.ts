@@ -183,7 +183,7 @@ export const getDeployedAddress = (d: IDeployment, name: string): string|undefin
 
 export const saveDeployment = (d: IDeployment, update=true, light=false) => {
   const basename = d.name + (light ? "-light" : "");
-  const prevFilename = update ? getLatestFileName(config.paths.registry, basename) : undefined;
+  const prevFilename = update ? getLatestFileName(`${config.paths.registry}/deployments`, basename) : undefined;
   const filename = prevFilename ?? `${basename}-${nowEpochUtc()}.json`;
   const path = `${config.paths.registry}/deployments/${filename}`;
   const toSave = {
@@ -223,7 +223,7 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
   saveJson(path, toSave);
 }
 
-export const saveLightDeployment = (d: IDeployment) => saveDeployment(d, true);
+export const saveLightDeployment = (d: IDeployment, update=true) => saveDeployment(d, update, true);
 
 export const writeRegistry = saveDeployment;
 export const writeLightRegistry = saveLightDeployment;

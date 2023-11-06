@@ -8,8 +8,8 @@ export function getLatestFileName(directory = "./", pattern: RegExp | string = "
     .filter((file) => (pattern ? (pattern as RegExp).test(file) : true))
     .sort(
       (a, b) =>
-        parseInt(b.match(/\d+$/)?.[0] ?? "") -
-        parseInt(a.match(/\d+$/)?.[0] ?? "")
+        parseInt(b.match(/(.+)-(\d+)(?:\..*)$/)?.[2] ?? "") -
+        parseInt(a.match(/(.+)-(\d+)(?:\..*)$/)?.[2] ?? "")
     );
 
   if (files.length === 0) {
