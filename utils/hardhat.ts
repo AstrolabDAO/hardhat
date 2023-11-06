@@ -88,14 +88,14 @@ export async function resetLocalNetwork(
   });
 }
 
-export async function deployAll(d: IDeployment): Promise<IDeployment> {
+export async function deployAll(d: IDeployment, update=false): Promise<IDeployment> {
   if (!d.name)
     throw new Error(`Missing name for deployment`);
   if (!d.units || !Object.values(d.units).length) {
     return await deployAll({
       name: `${d.name}-standalone`,
       contract: d.contract,
-      units: { [d.name]: d } });
+      units: { [d.name]: d } }, update);
   }
   for (const u of Object.values(d.units)) {
     u.deployer ??= d.deployer ?? d.provider;
@@ -107,7 +107,8 @@ export async function deployAll(d: IDeployment): Promise<IDeployment> {
     d.verified = true;
   if (!d.deployer)
     d.deployer = Object.values(d.units)[0].deployer;
-  await saveDeployment(d);
+  saveDeployment(d, update);
+  saveLightDeployment(d, update);
   return d;
 }
 
@@ -120,15 +121,15 @@ export const getAbiFromArtifacts = (name: string): Interface|undefined =>
 export const exportAbi = (d: IDeploymentUnit) => {
   const path = `/abis/${d.contract}.json`;
   saveJson(`${config.paths.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
-  console.log(`Exported ABI for ${d.name} [${d.contract}] to @astrolabs/registry${path}`);
+  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to @astrolabs/registry${path}`);
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
-  const chainSlug = networkById[d.chainId!].slug;
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
+  const chainSlug = networkById[d.chainId!].slug;
   d.name ||= `${d.contract}-${chainSlug}`;
-  console.log(`Deploying ${d.name} [${d.contract}] on ${networkById[d.chainId!].slug}...`);
+  console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
   const factory = await ethers.getContractFactory(d.contract, d.deployer);
   const contract = (await (d.args
     ? factory.deploy(d.args)
@@ -233,15 +234,15 @@ export const saveLightDeployment = (d: IDeployment, update=true) => saveDeployme
 export const writeRegistry = saveDeployment;
 export const writeLightRegistry = saveLightDeployment;
 
-export const saveDeploymentUnit = (d: IDeployment, u: IDeploymentUnit) => {
+export const saveDeploymentUnit = (d: IDeployment, u: IDeploymentUnit, update=true) => {
   const deployment = loadDeployment(d);
   if (deployment.units) {
     deployment.units[u.name!] = u;
   } else {
     deployment.units = { [u.name!]: u };
   }
-  saveDeployment(deployment);
-  saveLightDeployment(deployment);
+  saveDeployment(deployment, update);
+  saveLightDeployment(deployment, update);
 }
 
 export const generateContractName = (
