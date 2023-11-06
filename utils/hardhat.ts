@@ -89,9 +89,12 @@ export async function resetLocalNetwork(
 }
 
 export async function deployAll(d: IDeployment): Promise<IDeployment> {
+  if (!d.name)
+    throw new Error(`Missing name for deployment`);
   if (!d.units || !Object.values(d.units).length) {
     return await deployAll({
       name: `${d.name}-standalone`,
+      contract: d.contract,
       units: { [d.name]: d } });
   }
   for (const u of Object.values(d.units)) {
@@ -233,9 +236,9 @@ export const writeLightRegistry = saveLightDeployment;
 export const saveDeploymentUnit = (d: IDeployment, u: IDeploymentUnit) => {
   const deployment = loadDeployment(d);
   if (deployment.units) {
-    deployment.units[u.name] = u;
+    deployment.units[u.name!] = u;
   } else {
-    deployment.units = { [u.name]: u };
+    deployment.units = { [u.name!]: u };
   }
   saveDeployment(deployment);
   saveLightDeployment(deployment);
