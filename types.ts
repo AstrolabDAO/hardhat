@@ -16,6 +16,8 @@ export interface IDeploymentUnit {
   provider?: Wallet;
   local?: boolean;
   args?: unknown;
+  export?: boolean;
+  exported?: boolean;
   verify?: boolean;
   verified?: boolean;
   libraries?: Record<string, string>;
@@ -143,3 +145,14 @@ export interface TransactionReceipt {
   type: number;
   status?: number
 };
+
+export interface IArtefacts {
+  interface?: string;
+  abi?: any;
+  bytecode?: string;
+  deployedBytecode?: string;
+  linkReferences?: any;
+  deployedLinkReferences?: any;
+  deployedSolcVersion?: string;
+  sourceMap?: string;
+}

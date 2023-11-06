@@ -12,7 +12,10 @@ export function getLatestFileName(directory = "./", pattern: RegExp | string = "
         parseInt(a.match(/\d+$/)?.[0] ?? "")
     );
 
-  if (files.length === 0) throw new Error("No matching files found");
+  if (files.length === 0) {
+    console.warn(`No matching files found in ${directory}`);
+    undefined;
+  }
   return files[0];
 }
 
@@ -22,8 +25,21 @@ export function getLatestFile(directory = "./", pattern: RegExp | string = "") {
   return fs.readFileSync(`${directory}/${filename}`, "utf8");
 }
 
-export const loadJson = (filename: string): any | undefined =>
-  JSON.parse(fs.readFileSync(filename).toString());
+export const loadJson = (filename: string): any | undefined => {
+  try {
+    return JSON.parse(fs.readFileSync(filename).toString());
+  } catch (e) {
+    console.log(`Error loading ${filename}: ${e}`);
+  }
+}
+
+export const saveJson = (filename: string, data: any) => {
+  try {
+    fs.writeFileSync(filename, typeof data == "string" ? data : JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.log(`Error saving ${filename}: ${e}`);
+  }
+}
 
 export const loadLatestJson = (
   directory: string,

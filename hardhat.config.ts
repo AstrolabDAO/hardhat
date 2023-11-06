@@ -1,6 +1,5 @@
 export * from "@nomiclabs/hardhat-ethers";
 export * from "@nomiclabs/hardhat-etherscan";
-export * from "hardhat-abi-exporter";
 import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
@@ -12,6 +11,8 @@ tenderly.setup({ automaticVerifications: false });
 
 if (!process.env?.TEST_MNEMONIC)
   throw new Error("missing env.TEST_MNEMONIC");
+
+process.env.REGISTRY_DIR ??= "./registry"
 
 const accounts = {
   mnemonic: process.env?.TEST_MNEMONIC,
@@ -78,11 +79,14 @@ const [hhNetworks, scanKeys] = networks
 const config = {
   solidity: "0.8.20",
   paths: {
+    registry: process.env.REGISTRY_DIR,
+    abis: process.env.REGISTRY_DIR + "./abis",
+    interfaces: process.env.REGISTRY_DIR + "./interfaces",
+
+    cache: process.env.CACHE_DIR + "./cache",
     artifacts: process.env.ARTIFACTS_DIR ?? "./artifacts",
-    cache: process.env.CACHE_DIR ?? "./cache",
     sources: process.env.CONTRACTS_DIR ?? "./contracts",
     tests: process.env.CONTRACTS_TESTS_DIR ?? "./test/integration",
-    registry: process.env.REGISTRY_DIR ?? "./registry",
   },
   networks: hhNetworks,
   tenderly: {
@@ -102,17 +106,6 @@ const config = {
   etherscan: {
     customChains: hhNetworks,
     apiKey: scanKeys
-  },
-  abiExporter: {
-    path: (process.env.REGISTRY_DIR ?? "./registry") + "/abis",
-    runOnCompile: true,
-    clear: true,
-    flat: true,
-    // only: [':ERC20$'],
-    spacing: 2,
-    pretty: true,
-    format: "json", // "minimal" "fullName"
-    // filter: () => true,
   },
 }; // as Partial<HardhatConfig>;
 
