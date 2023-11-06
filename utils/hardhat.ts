@@ -44,7 +44,7 @@ export async function resetNetwork(
 }
 
 export async function deployAll(d: IDeployment): Promise<IDeployment> {
-  if (!Object.values(d.units).length) {
+  if (!d.units || !Object.values(d.units).length) {
     return await deployAll({
       name: `${d.name} Standalone`,
       units: { [d.name]: d } });
@@ -146,7 +146,7 @@ export const generateContractName = (
 
 export async function verifyContract(d: IDeployment, name: string) {
 
-  const u = d.units[name];
+  const u = d.units?.[name];
 
   if (!u?.address)
     throw new Error(`Cannot verify contract ${u.name}: no address provided - check if contract was deployed`);
