@@ -44,6 +44,11 @@ export async function resetNetwork(
 }
 
 export async function deployAll(d: IDeployment): Promise<IDeployment> {
+  if (!Object.values(d.units).length) {
+    return await deployAll({
+      name: `${d.name} Standalone`,
+      units: { [d.name]: d } });
+  }
   for (const u of Object.values(d.units)) {
     if (u.deployer) continue;
     u.chainId ??= d.chainId;
