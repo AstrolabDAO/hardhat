@@ -1,8 +1,8 @@
 import { Interface } from "ethers/lib/utils";
 import { BigNumber, Contract, Signer } from "ethers";
-import { ethers, run, network, artifacts } from "hardhat";
+import { ethers, run, network, artifacts, tenderly } from "hardhat";
 import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
-import * as tenderly from "@tenderly/hardhat-tenderly";
+import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 
 import { IArtefacts, IDeployment, IDeploymentUnit, INetwork } from "../types";
 import { config } from "../hardhat.config";
@@ -43,7 +43,7 @@ export async function changeNetwork(slug: string, blockNumber?: number) {
   ethers.provider = new EthersProviderWrapper(network.provider);
 
   if (slug.includes("tenderly"))
-    tenderly.setup();
+    tenderlySetup();
 }
 
 export const getDeployer = async (): Promise<Signer> =>

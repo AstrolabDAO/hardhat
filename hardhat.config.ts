@@ -60,10 +60,10 @@ const [hhNetworks, scanKeys] = networks
       // check for known tenderly fork (persistent) in .env in addition to the local fork
       const varname = `${slug}-tenderly-fork-id`;
       const forkId = process.env[varname];
-      if (forkId) {
+      if (forkId && Number(process.env.TENDERLY_CHAIN_ID) == network.id) {
         // TODO: add support for devNet
-        networks[`${slug}-tenderly`] = {
-          network: `${slug}-tenderly`,
+        networks[`tenderly`] = {
+          network: `tenderly`,
           url: `https://rpc.tenderly.co/fork/${forkId}`,
           urls: {
             apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
