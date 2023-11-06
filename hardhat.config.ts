@@ -46,9 +46,12 @@ const [hhNetworks, scanKeys] = networks
       // generate a local fork (transient) config for every known mainnet
       networks[`${slug}-local`] = {
         forking: {
+          enabled: true,
           url: network.httpRpcs[0], // Mainnet URL to fork from
           // blockNumber: "latest"
         },
+        url: network.httpRpcs[0],
+        port: process.env.HARDHAT_PORT ?? 8545,
         chainId: Number(network.id),
         accounts,
       };
