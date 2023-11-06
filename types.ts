@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish, BytesLike, Signer, Transaction, Wallet } from "ethers";
 
 export interface IDeployment extends IDeploymentUnit {
-  units: { [unit: string]: IDeploymentUnit };
+  units?: { [unit: string]: IDeploymentUnit };
 }
 
 export interface IDeploymentUnit {
