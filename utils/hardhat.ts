@@ -98,7 +98,7 @@ export const loadAbi = (name: string): Interface =>
 
 // loads a single contract deployment unit
 export const loadDeploymentUnit = (d: IDeployment, name: string): IDeploymentUnit|undefined =>
-  loadDeployment(d)?.units[name];
+  loadDeployment(d)?.units?.[name];
 
 export const getDeployedContract = (d: IDeployment, name: string): Contract => {
   const u = loadDeploymentUnit(d, name)!;
@@ -117,7 +117,7 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
   const filename = update ? getLatestFileName(config.paths.registry, basename) : `${basename}-${nowEpochUtc()}.json`;
   const path = `${config.paths.registry}/${filename}`;
   d = cloneDeep(d);
-  if (light) {
+  if (light && d.units) {
     for (const k of Object.keys(d.units)) {
       const u = d.units[k];
       d.units[k] = { name: u.name, contract: u.contract, address: u.address };
@@ -133,7 +133,11 @@ export const writeLightRegistry = saveLightDeployment;
 
 export const saveDeploymentUnit = (d: IDeployment, u: IDeploymentUnit) => {
   const deployment = loadDeployment(d);
-  deployment.units[u.name] = u;
+  if (deployment.units) {
+    deployment.units[u.name] = u;
+  } else {
+    deployment.units = { [u.name]: u };
+  }
   saveDeployment(deployment);
   saveLightDeployment(deployment);
 }
@@ -149,7 +153,7 @@ export async function verifyContract(d: IDeployment, name: string) {
   const u = d.units?.[name];
 
   if (!u?.address)
-    throw new Error(`Cannot verify contract ${u.name}: no address provided - check if contract was deployed`);
+    throw new Error(`Cannot verify contract ${u?.name ?? '?'}: no address provided - check if contract was deployed`);
 
   if (u.local) {
     console.log("Skipping verification for local deployment");
@@ -169,7 +173,7 @@ export async function verifyContract(d: IDeployment, name: string) {
 
   // We update the deployment file
   u.verified = true;
-  if (Object.values(d.units).every((u) => u.verified))
+  if (d.units && Object.values(d.units).every((u) => u.verified))
     d.verified = true;
   await saveDeployment(d);
 
