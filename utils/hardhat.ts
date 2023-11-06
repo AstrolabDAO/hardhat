@@ -196,12 +196,12 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
     slug: d.slug,
     version: d.version,
     chainId: d.chainId,
+    units: {},
     ...(!light && {
       verified: d.verified,
       exported: d.exported,
       local: d.local,
       deployer: (d.deployer as any)!.address,
-      units: {}
     }),
   };
   if (d.units) {
