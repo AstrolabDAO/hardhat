@@ -1,19 +1,55 @@
-import * as fs from "fs";
 import { Interface } from "ethers/lib/utils";
 import { BigNumber, Contract, Signer } from "ethers";
-import { ethers, tenderly, run, network } from "hardhat";
-import { Network } from "hardhat/types";
+import { ethers, run, network, artifacts } from "hardhat";
+import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
+import * as tenderly from "@tenderly/hardhat-tenderly";
 
 import { IArtefacts, IDeployment, IDeploymentUnit, INetwork } from "../types";
 import { config } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
 import { cloneDeep, nowEpochUtc } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
+import { createProvider } from "hardhat/internal/core/providers/construction";
+import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
+
+const providers: { [name: string]: EthereumProvider } = {};
+
+const getProvider = async (name: string): Promise<EthereumProvider> => {
+  if (!providers[name]) {
+    providers[name] = await createProvider(
+      config as any,
+      name,
+      artifacts
+    );
+  }
+  return providers[name];
+};
+
+export async function changeNetwork(slug: string, blockNumber?: number) {
+
+  if (slug.includes("local"))
+    return await resetLocalNetwork(slug, "hardhat", blockNumber);
+
+  if (!config.networks[slug])
+    throw new Error(`changeNetwork: Couldn't find network '${slug}'`);
+
+  if (!providers[network.name])
+    providers[network.name] = network.provider;
+
+  network.name = slug;
+  network.config = config.networks[slug];
+  network.provider = await getProvider(slug);
+
+  ethers.provider = new EthersProviderWrapper(network.provider);
+
+  if (slug.includes("tenderly"))
+    tenderly.setup();
+}
 
 export const getDeployer = async (): Promise<Signer> =>
   (await ethers.getSigners())[0];
 
-export const revertNetwork = async (network: Network, snapshotId: any) =>
+export const revertNetwork = async (snapshotId: any) =>
   await network.provider.send("evm_revert", [snapshotId]);
 
 export const setBalance = async (
@@ -25,18 +61,26 @@ export const setBalance = async (
     BigNumber.from(amount).toHexString(), // wei
   ]);
 
-export async function resetNetwork(
-  network: Network,
-  target: Network,
+export async function resetLocalNetwork(
+  slug: string,
+  name="hardhat",
   blockNumber?: number
 ) {
+  const target = config.networks[slug] as HttpNetworkConfig;
+  if (!target)
+    throw new Error(`resetLocalNetwork: Couldn't find network '${slug}'`);
   await network.provider.request({
     method: "hardhat_reset",
     params: [
       {
+        network: name,
+        url: target.url,
+        port: process.env.HARDHAT_PORT ?? 8545,
+        chainId: Number(network.config.chainId),
+        // accounts,
         forking: {
-          jsonRpcUrl: (<any>target.config).url!, // forking.url?
-          networkId: target.config.chainId,
+          jsonRpcUrl: target.url,
+          networkId: target.chainId,
           ...(blockNumber && { blockNumber }), // <-- latest by default
         },
       },

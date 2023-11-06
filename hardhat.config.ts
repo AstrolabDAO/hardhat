@@ -46,6 +46,7 @@ const [hhNetworks, scanKeys] = networks
 
       // generate a local fork (transient) config for every known mainnet
       networks[`${slug}-local`] = {
+        network: `${slug}-local`,
         forking: {
           enabled: true,
           url: network.httpRpcs[0], // Mainnet URL to fork from
