@@ -1,13 +1,23 @@
-import { BigNumber, BigNumberish, BytesLike, Signer, Transaction } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Signer, Transaction, Wallet } from "ethers";
 
-export interface IDeployable {
+export interface IDeployment extends IDeploymentUnit {
+  units: { [unit: string]: IDeploymentUnit };
+}
+
+export interface IDeploymentUnit {
   name: string;
+  contract?: string;
   slug?: string;
-  description?: string;
+  chainId?: number;
+  address?: string;
+  tx?: string;
   version?: number;
   deployer?: Signer;
+  provider?: Wallet;
+  local?: boolean;
   args?: unknown;
   verify?: boolean;
+  verified?: boolean;
   libraries?: Record<string, string>;
 }
 

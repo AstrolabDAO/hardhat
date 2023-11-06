@@ -1,5 +1,6 @@
 export * from "@nomiclabs/hardhat-ethers";
 export * from "@nomiclabs/hardhat-etherscan";
+export * from "hardhat-abi-exporter";
 import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
@@ -40,12 +41,22 @@ const [hhNetworks, scanKeys] = networks
     // scan api keys
     keys[network.slug] = process.env[varname];
 
-    // check for tenderly forks in .env
     if (network.slug.includes("mainnet")) {
+
+      // generate a local fork (transient) config for every known mainnet
+      networks[`${slug}-local`] = {
+        forking: {
+          url: network.httpRpcs[0], // Mainnet URL to fork from
+          // blockNumber: "latest"
+        },
+        chainId: Number(network.id),
+        accounts,
+      };
+      // check for known tenderly fork (persistent) in .env in addition to the local fork
       const varname = `${slug}-tenderly-fork-id`;
       const forkId = process.env[varname];
       if (forkId) {
-        // TODO: add support for multi forks / devNet
+        // TODO: add support for devNet
         networks[`${slug}-tenderly`] = {
           network: `${slug}-tenderly`,
           url: `https://rpc.tenderly.co/fork/${forkId}`,
@@ -64,10 +75,11 @@ const [hhNetworks, scanKeys] = networks
 const config = {
   solidity: "0.8.20",
   paths: {
-    artifacts: "./artifacts",
-    cache: "./cache",
+    artifacts: process.env.ARTIFACTS_DIR ?? "./artifacts",
+    cache: process.env.CACHE_DIR ?? "./cache",
     sources: process.env.CONTRACTS_DIR ?? "./contracts",
-    tests: process.env.CONTRACTS_TESTS_DIR ?? "./test/integration"
+    tests: process.env.CONTRACTS_TESTS_DIR ?? "./test/integration",
+    registry: process.env.REGISTRY_DIR ?? "./registry",
   },
   networks: hhNetworks,
   tenderly: {
@@ -78,10 +90,26 @@ const config = {
   },
   mocha: {
     timeout: 1_200_000,
+    reporter: "mocha-multi",
+    reporterOptions: {
+      spec: "-", // default mocha reporter
+      json: "./test-report.json",
+    },
   },
   etherscan: {
     customChains: hhNetworks,
     apiKey: scanKeys
+  },
+  abiExporter: {
+    path: (process.env.REGISTRY_DIR ?? "./registry") + "/abis",
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    // only: [':ERC20$'],
+    spacing: 2,
+    pretty: true,
+    format: "json", // "minimal" "fullName"
+    // filter: () => true,
   },
 }; // as Partial<HardhatConfig>;
 
