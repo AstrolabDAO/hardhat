@@ -5,8 +5,8 @@ export interface IDeployment extends IDeploymentUnit {
 }
 
 export interface IDeploymentUnit {
-  name: string;
-  contract?: string;
+  contract: string;
+  name?: string;
   slug?: string;
   chainId?: number;
   address?: string;

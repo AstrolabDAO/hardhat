@@ -114,13 +114,18 @@ export const getArtifacts = (name: string): IArtefacts|undefined =>
 export const getAbiFromArtifacts = (name: string): Interface|undefined =>
   getArtifacts(name)?.abi;
 
-export const exportAbi = (d: IDeploymentUnit) =>
-  saveJson(`${config.paths.registry}/abis/${d.contract}.json`, { abi: getAbiFromArtifacts(d.contract!) });
+export const exportAbi = (d: IDeploymentUnit) => {
+  const path = `/abis/${d.contract}.json`;
+  saveJson(`${config.paths.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
+  console.log(`Exported ABI for ${d.name} [${d.contract}] to @astrolabs/registry${path}`);
+}
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
+  const chainSlug = networkById[d.chainId!].slug;
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
-  d.contract ||= d.name;
+  d.name ||= `${d.contract}-${chainSlug}`;
+  console.log(`Deploying ${d.name} [${d.contract}] on ${networkById[d.chainId!].slug}...`);
   const factory = await ethers.getContractFactory(d.contract, d.deployer);
   const contract = (await (d.args
     ? factory.deploy(d.args)
@@ -145,11 +150,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.verify ??= true;
   if (d.verify && !d.local) {
     try {
-      await tenderly.verify({
-        name: d.contract!,
-        address: d.address!,
-        libraries: d.libraries ?? {},
-      });
+      const ok = await verifyContract(d);
       d.verified = true;
     } catch (e) {
       d.verified = false;
@@ -221,6 +222,7 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
     }
   }
   saveJson(path, toSave);
+  console.log(`${prevFilename ? 'Updated' : 'Saved'} ${light ? 'light ' : ''}deployment @astrolabs/registry/deployments/${filename}`);
 }
 
 export const saveLightDeployment = (d: IDeployment, update=true) => saveDeployment(d, update, true);
@@ -245,34 +247,33 @@ export const generateContractName = (
   chainId?: number
 ): string => `${contract} ${assets.join("-")}${chainId ? ` ${networkById[chainId].name}` : ""}`;
 
-export async function verifyContract(d: IDeployment, name: string) {
+export async function verifyContract(d: IDeploymentUnit) {
 
-  const u = d.units?.[name];
+  if (!d?.address)
+    throw new Error(`Cannot verify contract ${d?.name ?? '?'}: no address provided - check if contract was deployed`);
 
-  if (!u?.address)
-    throw new Error(`Cannot verify contract ${u?.name ?? '?'}: no address provided - check if contract was deployed`);
-
-  if (u.local) {
+  if (d.local) {
     console.log("Skipping verification for local deployment");
     return;
-  }
+  } else if (network.name.includes("tenderly")) {
+    await tenderly.verify({
+      name: d.contract!,
+      address: d.address!,
+      libraries: d.libraries,
+    });
+    console.log("Contract verified on Tenderly ✅");
+  } else {
+    if (!networkById[d.chainId!].explorerApi)
+      throw new Error(`Cannot verify contract ${d.name}: no explorer API provided for network ${d.chainId}`);
 
-  if (!networkById[u.chainId!].explorerApi)
-    throw new Error(`Cannot verify contract ${u.name}: no explorer API provided for network ${u.chainId}`);
-
-  console.log(`Verifying ${u.name} on ${networkById[u.chainId!].explorerApi}...`);
-
-  await run("verify:verify", {
-    address: u.address,
-    ...(u.libraries && { libraries: u.libraries }),
-    ...(u.args && { constructorArguments: u.args } as any),
-  });
-
-  // We update the deployment file
-  u.verified = true;
-  if (d.units && Object.values(d.units).every((u) => u.verified))
-    d.verified = true;
-  await saveDeployment(d);
-
-  console.log("Contract verified on explorer ✅");
+    console.log(`Verifying ${d.name} on ${networkById[d.chainId!].explorerApi}...`);
+    await run("verify:verify", {
+      address: d.address,
+      ...(d.libraries && { libraries: d.libraries }),
+      ...(d.args && { constructorArguments: d.args } as any),
+    });
+    console.log("Contract verified on explorer ✅");
+    }
+  d.verified = true;
+  return true;
 }
