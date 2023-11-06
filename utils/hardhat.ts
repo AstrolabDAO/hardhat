@@ -43,21 +43,44 @@ export async function resetNetwork(
   });
 }
 
+export async function deployAll(d: IDeployment): Promise<IDeployment> {
+  for (const u of Object.values(d.units)) {
+    if (u.deployer) continue;
+    u.chainId ??= d.chainId;
+    u.local ??= d.local;
+    const contract = await deploy(u);
+  }
+  if (Object.values(d.units).every((u) => u.verified))
+    d.verified = true;
+  await saveDeployment(d);
+  return d;
+}
+
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   const factory = await ethers.getContractFactory(d.name, d.deployer);
   const contract = (await (d.args
     ? factory.deploy(d.args)
-    : factory.deploy())) as any;
+    : factory.deploy())) as Contract;
   await contract.deployed?.();
-  contract.target ??= contract.address;
-  contract.address ??= contract.target;
-  if (d.verify) {
-    await tenderly.verify({
-      name: d.name,
-      address: contract.target as string,
-      libraries: d.libraries ?? {},
-    });
+  (contract as any).target ??= contract.address;
+  (contract as any).address ??= contract.target; // ethers v6 polyfill
+  if (!d.address)
+    throw new Error(`Deployment of ${d.name} failed`);
+  d.address = contract.address;
+  d.tx = contract.deployTransaction.hash;
+  if (d.verify && !d.local) {
+    try {
+      await tenderly.verify({
+        name: d.name,
+        address: d.address!,
+        libraries: d.libraries ?? {},
+      });
+      d.verified = true;
+    } catch (e) {
+      d.verified = false;
+      console.log(`Verification failed for ${d.name}: ${e}`);
+    }
   }
   return contract;
 }
@@ -107,6 +130,7 @@ export const saveDeploymentUnit = (d: IDeployment, u: IDeploymentUnit) => {
   const deployment = loadDeployment(d);
   deployment.units[u.name] = u;
   saveDeployment(deployment);
+  saveLightDeployment(deployment);
 }
 
 export const generateContractName = (
