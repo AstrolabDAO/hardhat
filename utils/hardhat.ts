@@ -91,7 +91,7 @@ export async function resetLocalNetwork(
 export async function deployAll(d: IDeployment): Promise<IDeployment> {
   if (!d.units || !Object.values(d.units).length) {
     return await deployAll({
-      name: `${d.name} Standalone`,
+      name: `${d.name}-standalone`,
       units: { [d.name]: d } });
   }
   for (const u of Object.values(d.units)) {
