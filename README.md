@@ -13,9 +13,8 @@
 </div>
 
 This repository serves as Astrolab's foundational setup for smart contract development.
-It embed [Hardhat](https://github.com/NomicFoundation/hardhat) enriched with [blockchains metadata](./_networks.json) supplemented by [Tenderly's plugin](https://github.com/Tenderly/hardhat-tenderly).
-cf. [hardhat base configuration](./hardhat.config.ts)
-It enables easy bootstraping of any web3 back-end and/or smart contract development project by minimizing the necessity of boilerplate code.
+It embeds [Hardhat](https://github.com/NomicFoundation/hardhat), Astrolab's [blockchains metadata](./_networks.json) supplemented by [Tenderly's Hardhat plugin](https://github.com/Tenderly/hardhat-tenderly) (cf. [hardhat base configuration](./hardhat.config.ts)).
+Importing this stack as below enables easy bootstraping of any web3 back-end and/or smart contract development project by minimizing the necessity for boilerplate code, often redundant across repositories.
 
 Astrolab utilizes this setup across most its contract and blockchain SDK repositories.
 
