@@ -1,4 +1,7 @@
 // NB: the below functions are borrowed from monorepo/utils/format
+
+import { BigNumber } from "ethers";
+
 // these should be moved to a utils esm package
 export const shortenAddress = (address: string) =>
   `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -25,3 +28,16 @@ export const cloneDeep = <T>(o: T): T =>
         Object.entries(o).map(([k, v]) => [k, cloneDeep(v)])
       ) as unknown as T)
     : o;
+
+export const weiToString = (wei: number|string|bigint|BigNumber): string => {
+  if (typeof wei === "string") {
+    return wei;
+  } else if (wei instanceof BigNumber) {
+    return wei.toString();
+  } else {
+    if (typeof wei === "number")
+      wei = BigInt(Math.round(wei));
+    return wei.toString();
+  // return wei.toLocaleString("en-US").replace(/,/g, "");
+  }
+}

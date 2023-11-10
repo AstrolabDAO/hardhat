@@ -1,10 +1,11 @@
 export * from "@nomiclabs/hardhat-ethers";
-export * from "@nomiclabs/hardhat-etherscan";
+export * from "@nomicfoundation/hardhat-verify";
+export * from "@nomicfoundation/hardhat-network-helpers";
 import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
 import { INetwork } from "./types";
 import { networks } from "./networks";
-import { clearNetworkTypeFromSlug, toUpperSnake } from "./utils/format";
+import { clearNetworkTypeFromSlug } from "./utils/format";
 
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
@@ -55,7 +56,10 @@ const [hhNetworks, scanKeys] = networks
         url: network.httpRpcs[0],
         port: process.env.HARDHAT_PORT ?? 8545,
         chainId: Number(network.id),
-        accounts,
+        accounts: {
+          ...accounts,
+          accountsBalance: "10000000000000000000000",
+        },
       };
       // check for known tenderly fork (persistent) in .env in addition to the local fork
       const varname = `${slug}-tenderly-fork-id`;

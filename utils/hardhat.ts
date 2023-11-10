@@ -5,7 +5,7 @@ import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 
 import { IArtefacts, IDeployment, IDeploymentUnit, INetwork } from "../types";
-import { config } from "../hardhat.config";
+import { config, setBalance } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
 import { cloneDeep, nowEpochUtc } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
@@ -52,14 +52,22 @@ export const getDeployer = async (): Promise<Signer> =>
 export const revertNetwork = async (snapshotId: any) =>
   await network.provider.send("evm_revert", [snapshotId]);
 
-export const setBalance = async (
+export const setBalances = async (
   amount: BigNumber | number | string,
   ...addresses: string[]
-) =>
-  await ethers.provider.send("tenderly_setBalance", [
-    addresses,
-    BigNumber.from(amount).toHexString(), // wei
-  ]);
+) => {
+
+  const hexAmount = BigNumber.from(amount).toHexString();
+  (network.name.includes("tenderly")) ?
+    await ethers.provider.send("tenderly_setBalance", [
+      addresses,
+      hexAmount
+    ]) : await Promise.all(addresses.map(a =>
+      ethers.provider.send("tenderly_setBalance", [
+        a,
+        hexAmount
+      ])));
+}
 
 export async function resetLocalNetwork(
   slug: string,
@@ -121,7 +129,7 @@ export const getAbiFromArtifacts = (name: string): Interface|undefined =>
 export const exportAbi = (d: IDeploymentUnit) => {
   const path = `/abis/${d.contract}.json`;
   saveJson(`${config.paths.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
-  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to @astrolabs/registry${path}`);
+  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths.registry}/${path}`);
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
@@ -226,7 +234,7 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
     }
   }
   saveJson(path, toSave);
-  console.log(`${prevFilename ? 'Updated' : 'Saved'} ${light ? 'light ' : ''}deployment @astrolabs/registry/deployments/${filename}`);
+  console.log(`${prevFilename ? 'Updated' : 'Saved'} ${light ? 'light ' : ''}deployment ${config.paths.registry}/deployments/${filename}`);
 }
 
 export const saveLightDeployment = (d: IDeployment, update=true) => saveDeployment(d, update, true);
