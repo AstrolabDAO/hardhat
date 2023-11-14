@@ -10,10 +10,9 @@ import { clearNetworkTypeFromSlug } from "./utils/format";
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
 
-if (!process.env?.TEST_MNEMONIC)
-  throw new Error("missing env.TEST_MNEMONIC");
+if (!process.env?.TEST_MNEMONIC) throw new Error("missing env.TEST_MNEMONIC");
 
-process.env.REGISTRY_DIR ??= "./registry"
+process.env.REGISTRY_DIR ??= "./registry";
 
 const accounts = {
   mnemonic: process.env?.TEST_MNEMONIC,
@@ -22,8 +21,11 @@ const accounts = {
   // count: 20,
 };
 
-const [hhNetworks, scanKeys] = networks
-  .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
+const [hhNetworks, scanKeys] = networks.reduce(
+  (
+    acc: [{ [slug: string]: any }, { [slug: string]: any }],
+    network: INetwork
+  ) => {
     const [networks, keys] = acc;
     const slug = clearNetworkTypeFromSlug(network.slug!);
     const varname = `${slug}-scan-api-key`;
@@ -32,19 +34,20 @@ const [hhNetworks, scanKeys] = networks
       network: network.slug,
       url: network.httpRpcs[0],
       urls: {
-        apiURL: network.explorerApi
-          ?.replace("{key}", process.env[varname] ?? ""),
-        browserURL: network.explorers![0]
+        apiURL: network.explorerApi?.replace(
+          "{key}",
+          process.env[varname] ?? ""
+        ),
+        browserURL: network.explorers![0],
       },
       chainId: Number(network.id),
-      accounts
+      accounts,
     };
 
     // scan api keys
     keys[network.slug] = process.env[varname];
 
     if (network.slug.includes("mainnet")) {
-
       // generate a local fork (transient) config for every known mainnet
       networks[`${slug}-local`] = {
         network: `${slug}-local`,
@@ -71,18 +74,27 @@ const [hhNetworks, scanKeys] = networks
           url: `https://rpc.tenderly.co/fork/${forkId}`,
           urls: {
             apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
-            browserURL: `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions`
+            browserURL: `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions`,
           },
-          chainId: Number(process.env[`${slug}-tenderly-chain-id`]) || network.id,
-          accounts
+          chainId:
+            Number(process.env[`${slug}-tenderly-chain-id`]) || network.id,
+          accounts,
         };
       }
     }
     return acc;
-  }, [{ hardhat: { accounts } }, {}]);
+  },
+  [{ hardhat: { accounts } }, {}]
+);
 
 const config = {
   solidity: "0.8.20",
+  settings: {
+    optimizer: {
+      enabled: true,
+      runs: 200,
+    },
+  },
   paths: {
     registry: process.env.REGISTRY_DIR,
     abis: process.env.REGISTRY_DIR + "./abis",
@@ -110,7 +122,7 @@ const config = {
   },
   etherscan: {
     customChains: hhNetworks,
-    apiKey: scanKeys
+    apiKey: scanKeys,
   },
 }; // as Partial<HardhatConfig>;
 
