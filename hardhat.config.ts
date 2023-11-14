@@ -1,5 +1,5 @@
 export * from "@nomiclabs/hardhat-ethers";
-export * from "@nomicfoundation/hardhat-verify";
+export * from "@nomiclabs/hardhat-etherscan";
 export * from "@nomicfoundation/hardhat-network-helpers";
 import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
