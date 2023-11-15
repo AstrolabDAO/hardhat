@@ -6,6 +6,7 @@ import * as dotenv from "dotenv";
 import { INetwork } from "./types";
 import { networks } from "./networks";
 import { clearNetworkTypeFromSlug } from "./utils/format";
+import { HardhatConfig, NetworksConfig, ProjectPathsConfig, SolidityConfig } from "hardhat/types";
 
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
@@ -21,11 +22,18 @@ const accounts = {
   // count: 20,
 };
 
-const [hhNetworks, scanKeys] = networks.reduce(
-  (
-    acc: [{ [slug: string]: any }, { [slug: string]: any }],
-    network: INetwork
-  ) => {
+interface ExtendedHardhatConfig extends HardhatConfig {
+  defaultNetwork: string;
+  paths: ProjectPathsConfig & { registry: string, abis: string, interfaces: string };
+  networks: NetworksConfig;
+  solidity: SolidityConfig;
+  mocha: Mocha.MochaOptions;
+}
+
+type CustomPaths = ProjectPathsConfig & { registry: string, abis: string, interfaces: string };
+
+const [hhNetworks, scanKeys] = networks
+  .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
     const [networks, keys] = acc;
     const slug = clearNetworkTypeFromSlug(network.slug!);
     const varname = `${slug}-scan-api-key`;
@@ -88,14 +96,20 @@ const [hhNetworks, scanKeys] = networks.reduce(
 );
 
 const config = {
-  solidity: "0.8.20",
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 200,
-    },
-  },
+  solidity: {
+    compilers: [{
+      version: "0.8.20",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 100,
+        },
+      }
+    }]
+  } as SolidityConfig,
   paths: {
+    root: process.env.PROJECT_DIR ?? "./",
+    configFile: process.env.HARDHAT_CONFIG ?? "./hardhat.config.ts",
     registry: process.env.REGISTRY_DIR,
     abis: process.env.REGISTRY_DIR + "./abis",
     interfaces: process.env.REGISTRY_DIR + "./interfaces",
@@ -104,8 +118,8 @@ const config = {
     artifacts: process.env.ARTIFACTS_DIR ?? "./artifacts",
     sources: process.env.CONTRACTS_DIR ?? "./contracts",
     tests: process.env.CONTRACTS_TESTS_DIR ?? "./test/integration",
-  },
-  networks: hhNetworks,
+  } as CustomPaths,
+  networks: hhNetworks as NetworksConfig,
   tenderly: {
     username: process.env.TENDERLY_USER,
     project: process.env.TENDERLY_PROJECT,
@@ -121,9 +135,9 @@ const config = {
     },
   },
   etherscan: {
-    customChains: hhNetworks,
-    apiKey: scanKeys,
+    customChains: Object.values(hhNetworks),
+    apiKey: scanKeys
   },
-}; // as Partial<HardhatConfig>;
+} as Partial<ExtendedHardhatConfig>;
 
 export { tenderly, config };

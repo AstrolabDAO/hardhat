@@ -30,14 +30,14 @@ export async function changeNetwork(slug: string, blockNumber?: number) {
   if (slug.includes("local"))
     return await resetLocalNetwork(slug, "hardhat", blockNumber);
 
-  if (!config.networks[slug])
+  if (!config.networks![slug])
     throw new Error(`changeNetwork: Couldn't find network '${slug}'`);
 
   if (!providers[network.name])
     providers[network.name] = network.provider;
 
   network.name = slug;
-  network.config = config.networks[slug];
+  network.config = config.networks![slug];
   network.provider = await getProvider(slug);
 
   ethers.provider = new EthersProviderWrapper(network.provider);
@@ -74,7 +74,7 @@ export async function resetLocalNetwork(
   name="hardhat",
   blockNumber?: number
 ) {
-  const target = config.networks[slug] as HttpNetworkConfig;
+  const target = config.networks![slug] as HttpNetworkConfig;
   if (!target)
     throw new Error(`resetLocalNetwork: Couldn't find network '${slug}'`);
   await network.provider.request({
@@ -121,15 +121,21 @@ export async function deployAll(d: IDeployment, update=false): Promise<IDeployme
 }
 
 export const getArtifacts = (name: string): IArtefacts|undefined =>
-  loadJson(`${config.paths.artifacts}/contracts/${name}.sol/${name}.json`);
+  loadJson(`${config.paths!.artifacts}/contracts/${name}.sol/${name}.json`);
 
 export const getAbiFromArtifacts = (name: string): Interface|undefined =>
   getArtifacts(name)?.abi;
 
 export const exportAbi = (d: IDeploymentUnit) => {
   const path = `/abis/${d.contract}.json`;
-  saveJson(`${config.paths.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
-  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths.registry}/${path}`);
+  saveJson(`${config.paths!.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
+  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${path}`);
+}
+
+export async function isContractLocal(d: IDeploymentUnit|string): Promise<boolean> {
+  const contract = typeof d === "string" ? d : d.contract!;
+  const src = (await artifacts.readArtifact(contract))?.sourceName;
+  return /^(src|\.\/src|contracts|\.\/contracts)/.test(src ?? "");
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
@@ -150,7 +156,10 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     throw new Error(`Deployment of ${d.name} failed: no address returned`);
   d.tx = contract.deployTransaction.hash;
   d.export ??= true;
-  if (d.export) {
+  const isLocal = await isContractLocal(d);
+  if (!isLocal)
+    console.log(`${d.name} is a foreign contract - not exporting ABI`);
+  if (d.export && isLocal) {
     try {
       exportAbi(d);
       d.exported = true;
@@ -173,10 +182,10 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 }
 
 export const loadDeployment = (d: IDeployment): IDeployment =>
-  loadLatestJson(config.paths.registry, d.name) as IDeployment;
+  loadLatestJson(config.paths!.registry, d.name) as IDeployment;
 
 export const loadAbi = (name: string): Interface =>
-  loadAbi(`${config.paths.registry}/abis/${name}.json`) as Interface;
+  loadAbi(`${config.paths!.registry}/abis/${name}.json`) as Interface;
 
 // loads a single contract deployment unit
 export const loadDeploymentUnit = (d: IDeployment, name: string): IDeploymentUnit|undefined =>
@@ -196,9 +205,9 @@ export const getDeployedAddress = (d: IDeployment, name: string): string|undefin
 
 export const saveDeployment = (d: IDeployment, update=true, light=false) => {
   const basename = d.name + (light ? "-light" : "");
-  const prevFilename = update ? getLatestFileName(`${config.paths.registry}/deployments`, basename) : undefined;
+  const prevFilename = update ? getLatestFileName(`${config.paths!.registry}/deployments`, basename) : undefined;
   const filename = prevFilename ?? `${basename}-${nowEpochUtc()}.json`;
-  const path = `${config.paths.registry}/deployments/${filename}`;
+  const path = `${config.paths!.registry}/deployments/${filename}`;
   const toSave = {
     name: d.name,
     slug: d.slug,
@@ -234,7 +243,7 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
     }
   }
   saveJson(path, toSave);
-  console.log(`${prevFilename ? 'Updated' : 'Saved'} ${light ? 'light ' : ''}deployment ${config.paths.registry}/deployments/${filename}`);
+  console.log(`${prevFilename ? 'Updated' : 'Saved'} ${light ? 'light ' : ''}deployment ${config.paths!.registry}/deployments/${filename}`);
 }
 
 export const saveLightDeployment = (d: IDeployment, update=true) => saveDeployment(d, update, true);
