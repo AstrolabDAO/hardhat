@@ -136,9 +136,10 @@ export const getArtifactSource = async (d: IDeploymentUnit|string): Promise<stri
 export const getAbiFromArtifacts = async (path: string): Promise<any[]|undefined> =>
   (await getArtifacts(path))?.abi;
 
-export const exportAbi = (d: IDeploymentUnit) => {
+export const exportAbi = async (d: IDeploymentUnit) => {
   const outputPath = `abis/${d.contract}.json`;
-  saveJson(`${config.paths!.registry}/${outputPath}`, { abi: getAbiFromArtifacts(d.contract!) });
+  const abi = await getAbiFromArtifacts(d.contract!);
+  saveJson(`${config.paths!.registry}/${outputPath}`, { abi });
   console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
 }
 
@@ -151,12 +152,11 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   const params = { deployer: d.deployer } as any;
   if (d.libraries)
     params.libraries = d.libraries;
-  const _deploy = (await ethers.getContractFactory(d.contract, params)).deploy;
+  const f = await ethers.getContractFactory(d.contract, params);
   const contract = (await (d.args
     ? ((d.args instanceof Array)
-      ? _deploy(...d.args)
-      : _deploy(d.args))
-    : _deploy())) as Contract;
+      ? f.deploy(...d.args): f.deploy(d.args))
+    : f.deploy())) as Contract;
   await contract.deployed?.();
   (contract as any).target ??= contract.address;
   (contract as any).address ??= contract.target; // ethers v6 polyfill
@@ -170,7 +170,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     console.log(`${d.name} is a foreign contract - not exporting ABI`);
   if (d.export && isLocal) {
     try {
-      exportAbi(d);
+      await exportAbi(d);
       d.exported = true;
     } catch (e) {
       d.exported = false;
