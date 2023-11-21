@@ -146,9 +146,13 @@ export interface TransactionReceipt {
   status?: number
 };
 
-export interface IArtefacts {
+// inherits from hardhat/types/Artifact
+export interface IArtifact {
+  _format?: string;
+  contractName?: string;
+  sourceName?: string;
   interface?: string;
-  abi?: any;
+  abi?: any[];
   bytecode?: string;
   deployedBytecode?: string;
   linkReferences?: any;

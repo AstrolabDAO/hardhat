@@ -4,7 +4,7 @@ import { ethers, run, network, artifacts, tenderly } from "hardhat";
 import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 
-import { IArtefacts, IDeployment, IDeploymentUnit, INetwork } from "../types";
+import { IArtifact, IDeployment, IDeploymentUnit, INetwork } from "../types";
 import { config, setBalance } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
 import { cloneDeep, nowEpochUtc } from "./format";
@@ -120,22 +120,26 @@ export async function deployAll(d: IDeployment, update=false): Promise<IDeployme
   return d;
 }
 
-export const getArtifacts = (name: string): IArtefacts|undefined =>
-  loadJson(`${config.paths!.artifacts}/contracts/${name}.sol/${name}.json`);
-
-export const getAbiFromArtifacts = (name: string): Interface|undefined =>
-  getArtifacts(name)?.abi;
-
-export const exportAbi = (d: IDeploymentUnit) => {
-  const path = `/abis/${d.contract}.json`;
-  saveJson(`${config.paths!.registry}/${path}`, { abi: getAbiFromArtifacts(d.contract!) });
-  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${path}`);
+export const getArtifacts = async (d: IDeploymentUnit|string): Promise<IArtifact|undefined> => {
+  // const basename = path.split("/").pop();
+  // return loadJson(`${config.paths!.artifacts}/${path}.sol/${basename}.json`);
+  const contract = typeof d === "string" ? d : d.contract;
+  return await artifacts.readArtifact(contract);
 }
 
-export async function isContractLocal(d: IDeploymentUnit|string): Promise<boolean> {
-  const contract = typeof d === "string" ? d : d.contract!;
-  const src = (await artifacts.readArtifact(contract))?.sourceName;
-  return /^(src|\.\/src|contracts|\.\/contracts)/.test(src ?? "");
+export const isContractLocal = async (d: IDeploymentUnit|string): Promise<boolean> =>
+  /^(src|\.\/src|contracts|\.\/contracts)/.test(await getArtifactSource(d));
+
+export const getArtifactSource = async (d: IDeploymentUnit|string): Promise<string> =>
+  (await getArtifacts(d))?.sourceName ?? "";
+
+export const getAbiFromArtifacts = async (path: string): Promise<any[]|undefined> =>
+  (await getArtifacts(path))?.abi;
+
+export const exportAbi = (d: IDeploymentUnit) => {
+  const outputPath = `abis/${d.contract}.json`;
+  saveJson(`${config.paths!.registry}/${outputPath}`, { abi: getAbiFromArtifacts(d.contract!) });
+  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
