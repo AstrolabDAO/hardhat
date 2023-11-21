@@ -151,10 +151,12 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   const params = { deployer: d.deployer } as any;
   if (d.libraries)
     params.libraries = d.libraries;
-  const factory = await ethers.getContractFactory(d.contract, params);
+  const _deploy = (await ethers.getContractFactory(d.contract, params)).deploy;
   const contract = (await (d.args
-    ? factory.deploy(d.args)
-    : factory.deploy())) as Contract;
+    ? ((d.args instanceof Array)
+      ? _deploy(...d.args)
+      : _deploy(d.args))
+    : _deploy())) as Contract;
   await contract.deployed?.();
   (contract as any).target ??= contract.address;
   (contract as any).address ??= contract.target; // ethers v6 polyfill
