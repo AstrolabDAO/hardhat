@@ -139,32 +139,32 @@ export const getAbiFromArtifacts = async (path: string): Promise<any[]|undefined
 export const exportAbi = async (d: IDeploymentUnit) => {
 
   const outputPath = `abis/${d.contract}.json`;
-  const abi = await getAbiFromArtifacts(d.contract!);
-  if (!abi)
+  const proxyAbi = await getAbiFromArtifacts(d.contract!);
+  if (!proxyAbi)
     throw new Error(`No ABI found for ${d.name} [${d.contract}.sol]`);
-  const abiSignatures = new Set(abi.map(abiFragmentSignature));
+  const abiSignatures = new Set(proxyAbi.map(abiFragmentSignature));
 
   if (d.proxied?.length) {
 
     for (const p of d.proxied) {
 
-      const abi = loadAbi(p) as unknown[];
-      if (!abi) {
+      const implAbi = loadAbi(p) as unknown[];
+      if (!implAbi) {
         console.error(`Proxy ABI error: ${p} implementation ABI not found - skipping`);
         continue;
       }
 
-      for (const fragment of abi) {
+      for (const fragment of implAbi) {
         const signature = abiFragmentSignature(fragment);
         if (!abiSignatures.has(signature)) {
           abiSignatures.add(signature);
-          abi.push(fragment);
+          proxyAbi.push(fragment);
         }
       }
     }
   }
 
-  saveJson(`${config.paths!.registry}/${outputPath}`, { abi });
+  saveJson(`${config.paths!.registry}/${outputPath}`, { abi: proxyAbi });
   console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
 }
 
