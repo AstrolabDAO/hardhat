@@ -1,5 +1,5 @@
 import { Interface } from "ethers/lib/utils";
-import { BigNumber, Contract, Signer } from "ethers";
+import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
 import { ethers, run, network, artifacts, tenderly } from "hardhat";
 import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
@@ -148,7 +148,7 @@ export const exportAbi = async (d: IDeploymentUnit) => {
 
     for (const p of d.proxied) {
 
-      const abi = loadJson(`${config.paths!.registry}/abis/${p}.json`)?.abi;
+      const abi = loadAbi(p) as unknown[];
       if (!abi) {
         console.error(`Proxy ABI error: ${p} implementation ABI not found - skipping`);
         continue;
@@ -222,8 +222,8 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 export const loadDeployment = (d: IDeployment): IDeployment =>
   loadLatestJson(config.paths!.registry, d.name) as IDeployment;
 
-export const loadAbi = (name: string): Interface =>
-  loadAbi(`${config.paths!.registry}/abis/${name}.json`) as Interface;
+export const loadAbi = (name: string): ContractInterface|undefined =>
+  loadJson(`${config.paths!.registry}/abis/${name}.json`)?.abi;
 
 // loads a single contract deployment unit
 export const loadDeploymentUnit = (d: IDeployment, name: string): IDeploymentUnit|undefined =>
@@ -235,7 +235,9 @@ export const getDeployedContract = (d: IDeployment, name: string): Contract => {
   const deployer = u.deployer ?? u.provider ?? d.deployer ?? d.provider;
   if (!u.address || !deployer)
     throw new Error(`${d.slug}[${u.slug}] missing address, contract, abi or deployer`);
-  return new Contract(u.address, loadAbi(u.contract), deployer);
+  const abi = loadAbi(u.contract);
+  if (!abi) throw new Error(`${d.slug}[${u.slug}] missing ABI`);
+  return new Contract(u.address, abi, deployer);
 }
 
 export const getDeployedAddress = (d: IDeployment, name: string): string|undefined =>
