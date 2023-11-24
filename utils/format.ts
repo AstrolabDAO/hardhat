@@ -41,3 +41,13 @@ export const weiToString = (wei: number|string|bigint|BigNumber): string => {
   // return wei.toLocaleString("en-US").replace(/,/g, "");
   }
 }
+
+export function abiFragmentSignature(abiFragment: any): string {
+  if (abiFragment.type === "function") {
+    return `${abiFragment.name}(${abiFragment.inputs
+      .map((i: any) => i.type)
+      .join(",")})`;
+  } else {
+    return `${abiFragment.name ?? ""}(${abiFragment.type})`;
+  }
+}

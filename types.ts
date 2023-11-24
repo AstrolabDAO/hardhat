@@ -21,6 +21,7 @@ export interface IDeploymentUnit {
   verify?: boolean;
   verified?: boolean;
   libraries?: Record<string, string>;
+  proxied?: string[];
 }
 
 export interface INetwork {

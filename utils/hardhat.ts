@@ -7,7 +7,7 @@ import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 import { IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiable } from "../types";
 import { config, setBalance } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
-import { cloneDeep, nowEpochUtc } from "./format";
+import { abiFragmentSignature, cloneDeep, nowEpochUtc } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
@@ -137,26 +137,55 @@ export const getAbiFromArtifacts = async (path: string): Promise<any[]|undefined
   (await getArtifacts(path))?.abi;
 
 export const exportAbi = async (d: IDeploymentUnit) => {
+
   const outputPath = `abis/${d.contract}.json`;
   const abi = await getAbiFromArtifacts(d.contract!);
+  if (!abi)
+    throw new Error(`No ABI found for ${d.name} [${d.contract}.sol]`);
+  const abiSignatures = new Set(abi.map(abiFragmentSignature));
+
+  if (d.proxied?.length) {
+
+    for (const p of d.proxied) {
+
+      const abi = loadJson(`${config.paths!.registry}/abis/${p}.json`)?.abi;
+      if (!abi) {
+        console.error(`Proxy ABI error: ${p} implementation ABI not found - skipping`);
+        continue;
+      }
+
+      for (const fragment of abi) {
+        const signature = abiFragmentSignature(fragment);
+        if (!abiSignatures.has(signature)) {
+          abiSignatures.add(signature);
+          abi.push(fragment);
+        }
+      }
+    }
+  }
+
   saveJson(`${config.paths!.registry}/${outputPath}`, { abi });
   console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
+
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
+
   const chainSlug = networkById[d.chainId!].slug;
   d.name ||= `${d.contract}-${chainSlug}`;
   console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
   const params = { deployer: d.deployer } as any;
   if (d.libraries)
     params.libraries = d.libraries;
+
   const f = await ethers.getContractFactory(d.contract, params);
   const contract = (await (d.args
     ? ((d.args instanceof Array)
       ? f.deploy(...d.args): f.deploy(d.args))
     : f.deploy())) as Contract;
+
   await contract.deployed?.();
   (contract as any).target ??= contract.address;
   (contract as any).address ??= contract.target; // ethers v6 polyfill
