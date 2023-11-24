@@ -6,7 +6,7 @@ export interface IDeployment extends IDeploymentUnit {
 
 export interface IDeploymentUnit {
   contract: string;
-  name?: string;
+  name: string;
   slug?: string;
   chainId?: number;
   address?: string;
@@ -15,7 +15,7 @@ export interface IDeploymentUnit {
   deployer?: Signer;
   provider?: Wallet;
   local?: boolean;
-  args?: unknown|unknown[];
+  args?: unknown[];
   export?: boolean;
   exported?: boolean;
   verify?: boolean;
@@ -159,4 +159,11 @@ export interface IArtifact {
   deployedLinkReferences?: any;
   deployedSolcVersion?: string;
   sourceMap?: string;
+}
+
+export interface IVerifiable {
+  name: string;
+  address: string;
+  constructorArguments?: unknown[];
+  libraries?: Record<string, string>;
 }

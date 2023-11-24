@@ -4,7 +4,7 @@ import { ethers, run, network, artifacts, tenderly } from "hardhat";
 import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 
-import { IArtifact, IDeployment, IDeploymentUnit, INetwork } from "../types";
+import { IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiable } from "../types";
 import { config, setBalance } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
 import { cloneDeep, nowEpochUtc } from "./format";
@@ -285,23 +285,36 @@ export async function verifyContract(d: IDeploymentUnit) {
   if (d.local) {
     console.log("Skipping verification for local deployment");
     return;
-  } else if (network.name.includes("tenderly")) {
-    await tenderly.verify({
-      name: d.contract!,
-      address: d.address!,
-      libraries: d.libraries,
-    });
+  }
+
+  const args: IVerifiable = {
+    name: d.name,
+    address: d.address,
+  };
+
+  if (d.args)
+    args.constructorArguments = d.args;
+
+  if (d.libraries) {
+    const libraries: Record<string, string> = {};
+    // replace solc-style library paths with names for verification
+    for (const [path, address] of Object.entries(d.libraries)) {
+      const tokens = path.split(":");
+      const name = tokens[tokens.length - 1];
+      libraries[name] = address;
+    }
+    args.libraries = libraries;
+  }
+
+  if (network.name.includes("tenderly")) {
+    await tenderly.verify(args);
     console.log("Contract verified on Tenderly ✅");
   } else {
     if (!networkById[d.chainId!].explorerApi)
       throw new Error(`Cannot verify contract ${d.name}: no explorer API provided for network ${d.chainId}`);
 
     console.log(`Verifying ${d.name} on ${networkById[d.chainId!].explorerApi}...`);
-    await run("verify:verify", {
-      address: d.address,
-      ...(d.libraries && { libraries: d.libraries }),
-      ...(d.args && { constructorArguments: d.args } as any),
-    });
+    await run("verify:verify", args);
     console.log("Contract verified on explorer ✅");
     }
   d.verified = true;
