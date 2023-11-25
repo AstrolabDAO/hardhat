@@ -111,10 +111,14 @@ export async function deployAll(d: IDeployment, update=false): Promise<IDeployme
     u.local ??= d.local;
     const contract = await deploy(u);
   }
-  if (Object.values(d.units).every((u) => u.verified))
-    d.verified = true;
+
+  for (const attr of ["verified", "exported", "deployed"])
+    if (Object.values(d.units).every(u => (u as any)[attr]))
+      (d as any)[attr] = true;
+
   if (!d.deployer)
     d.deployer = Object.values(d.units)[0].deployer;
+
   saveDeployment(d, update);
   saveLightDeployment(d, update);
   return d;
@@ -180,43 +184,50 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   if (d.libraries)
     params.libraries = d.libraries;
 
-  const f = await ethers.getContractFactory(d.contract, params);
-  const contract = (await (d.args
-    ? ((d.args instanceof Array)
-      ? f.deploy(...d.args): f.deploy(d.args))
-    : f.deploy())) as Contract;
+  try {
+    const f = await ethers.getContractFactory(d.contract, params);
+    const contract = (await (d.args
+      ? ((d.args instanceof Array)
+        ? f.deploy(...d.args): f.deploy(d.args))
+      : f.deploy())) as Contract;
 
-  await contract.deployed?.();
-  (contract as any).target ??= contract.address;
-  (contract as any).address ??= contract.target; // ethers v6 polyfill
-  d.address = contract.address;
-  if (!d.address)
-    throw new Error(`Deployment of ${d.name} failed: no address returned`);
-  d.tx = contract.deployTransaction.hash;
-  d.export ??= true;
-  const isLocal = await isContractLocal(d);
-  if (!isLocal)
-    console.log(`${d.name} is a foreign contract - not exporting ABI`);
-  if (d.export && isLocal) {
-    try {
-      await exportAbi(d);
-      d.exported = true;
-    } catch (e) {
-      d.exported = false;
-      console.log(`Export failed for ${d.name}: ${e}`);
+    await contract.deployed?.();
+    (contract as any).target ??= contract.address;
+    (contract as any).address ??= contract.target; // ethers v6 polyfill
+    d.address = contract.address;
+    if (!d.address)
+      throw new Error(`Deployment of ${d.name} failed: no address returned`);
+    d.tx = contract.deployTransaction.hash;
+    d.export ??= true;
+    const isLocal = await isContractLocal(d);
+    if (!isLocal)
+      console.log(`${d.name} is a foreign contract - not exporting ABI`);
+    if (d.export && isLocal) {
+      try {
+        await exportAbi(d);
+        d.exported = true;
+      } catch (e) {
+        d.exported = false;
+        console.log(`Export failed for ${d.name}: ${e}`);
+      }
     }
-  }
-  d.verify ??= true;
-  if (d.verify && !d.local) {
-    try {
-      const ok = await verifyContract(d);
-      d.verified = true;
-    } catch (e) {
-      d.verified = false;
-      console.log(`Verification failed for ${d.name}: ${e}`);
+    d.verify ??= true;
+    if (d.verify && !d.local) {
+      try {
+        const ok = await verifyContract(d);
+        d.verified = true;
+      } catch (e) {
+        d.verified = false;
+        console.log(`Verification failed for ${d.name}: ${e}`);
+      }
     }
+    d.deployed = true;
+    return contract;
+  } catch (e) {
+    d.deployed = false;
+    console.error(`Deployment of ${d.name} failed: ${e}`);
+    throw e;
   }
-  return contract;
 }
 
 export const loadDeployment = (d: IDeployment): IDeployment =>

@@ -16,6 +16,7 @@ export interface IDeploymentUnit {
   provider?: Wallet;
   local?: boolean;
   args?: unknown[];
+  deployed?: boolean;
   export?: boolean;
   exported?: boolean;
   verify?: boolean;
