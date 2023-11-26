@@ -177,6 +177,16 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
 
+  if (d.address)
+    d.deployed = true;
+
+  if (d.deployed) {
+    if (!d.address)
+      throw new Error(`Deployment of ${d.name} rejected: marked deployed but no address provided`);
+    console.log(`Skipping deployment of ${d.name} [${d.contract}.sol]: already deployed at ${d.chainId}:${d.address ?? "???"}`);
+    return new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
+  }
+
   const chainSlug = networkById[d.chainId!].slug;
   d.name ||= `${d.contract}-${chainSlug}`;
   console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
