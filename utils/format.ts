@@ -18,6 +18,12 @@ export const clearFrom = (s: string, regex: string): string =>
 export const clearNetworkTypeFromSlug = (slug: string): string =>
   clearFrom(slug, "-mainnet|-testnet");
 
+export const toRaw = (s: string): string =>
+  s.replace(/[^0-9A-Za-zÀ-ÖØ-öø-ÿ-_.,:;\s]+/g, "").toLowerCase().trim();
+
+export const slugify = (s: string, sep="-") =>
+  toRaw(s).replace(/[-_.,;\s]+/ig, sep);
+
 export const nowEpochUtc = () => Math.floor(Date.now() / 1000);
 
 export const cloneDeep = <T>(o: T): T =>

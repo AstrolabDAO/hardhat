@@ -7,7 +7,7 @@ import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 import { IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiable } from "../types";
 import { config, setBalance } from "../hardhat.config";
 import { getNetwork, networkById } from "../networks";
-import { abiFragmentSignature, cloneDeep, nowEpochUtc } from "./format";
+import { abiFragmentSignature, cloneDeep, nowEpochUtc, slugify } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
@@ -265,17 +265,17 @@ export const getDeployedAddress = (d: IDeployment, name: string): string|undefin
   loadDeploymentUnit(d, name)?.address;
 
 export const saveDeployment = (d: IDeployment, update=true, light=false) => {
-  const basename = d.name + (light ? "-light" : "");
+  const basename = slugify(d.name) + (light ? "-light" : "");
   const prevFilename = update ? getLatestFileName(`${config.paths!.registry}/deployments`, basename) : undefined;
   const filename = prevFilename ?? `${basename}-${nowEpochUtc()}.json`;
   const path = `${config.paths!.registry}/deployments/${filename}`;
   const toSave = {
     name: d.name,
-    slug: d.slug,
     version: d.version,
     chainId: d.chainId,
     units: {},
     ...(!light && {
+      slug: d.slug ?? slugify(d.name!),
       verified: d.verified,
       exported: d.exported,
       local: d.local,
@@ -286,12 +286,11 @@ export const saveDeployment = (d: IDeployment, update=true, light=false) => {
     for (const k of Object.keys(d.units)) {
       const u = d.units[k];
       (toSave.units as any)![k] = {
-        name: u.name,
-        slug: u.slug,
         contract: u.contract,
         address: u.address,
         chainId: u.chainId ?? d.chainId,
         ...(!light && {
+          slug: u.slug ?? slugify(u.name!),
           local: u.local ?? d.local,
           tx: u.tx,
           deployer: ((u.deployer ?? d.deployer) as any).address,
