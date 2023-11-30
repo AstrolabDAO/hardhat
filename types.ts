@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, BytesLike, Signer, Transaction, Wallet } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Overrides, Signer, Transaction, Wallet } from "ethers";
 
 export interface IDeployment extends IDeploymentUnit {
   units?: { [unit: string]: IDeploymentUnit };
@@ -24,13 +24,7 @@ export interface IDeploymentUnit {
   libraries?: Record<string, string>;
   proxied?: string[];
   // tx overrides
-  overrides?: {
-    gasLimit?: BigNumberish;
-    gasPrice?: BigNumberish;
-    maxFeePerGas?: BigNumberish;
-    maxPriorityFeePerGas?: BigNumberish;
-    nonce?: BigNumberish;
-  }
+  overrides?: Overrides;
 }
 
 export interface INetwork {
