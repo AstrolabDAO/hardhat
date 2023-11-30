@@ -66,7 +66,7 @@ const [hhNetworks, scanKeys] = networks
         },
         url: network.httpRpcs[0],
         port: process.env.HARDHAT_PORT ?? 8545,
-        chainId: Number(network.id),
+        chainId: 1e12 + Number(network.id),
         accounts: {
           ...accounts,
           accountsBalance: "10000000000000000000000",

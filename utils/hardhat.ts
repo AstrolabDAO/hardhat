@@ -339,6 +339,11 @@ export async function verifyContract(d: IDeploymentUnit) {
     return;
   }
 
+  // if (d.verified || await isAlreadyVerified(d)) {
+  //   console.log(`Skipping verification for ${d.name}: already verified`);
+  //   return;
+  // }
+
   const args: IVerifiable = {
     name: d.name,
     address: d.address,
