@@ -23,6 +23,14 @@ export interface IDeploymentUnit {
   verified?: boolean;
   libraries?: Record<string, string>;
   proxied?: string[];
+  // tx overrides
+  overrides?: {
+    gasLimit?: BigNumberish;
+    gasPrice?: BigNumberish;
+    maxFeePerGas?: BigNumberish;
+    maxPriorityFeePerGas?: BigNumberish;
+    nonce?: BigNumberish;
+  }
 }
 
 export interface INetwork {

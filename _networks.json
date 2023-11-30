@@ -730,7 +730,7 @@
     "https://explorer.mantle.xyz",
     "https://mantlescan.info"
   ],
-  "explorerApi": ""
+  "explorerApi": "https://explorer.mantle.xyz/api"
 },
 {
   "name": "Mantle Testnet",

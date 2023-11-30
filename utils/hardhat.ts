@@ -140,12 +140,14 @@ export const getArtifactSource = async (d: IDeploymentUnit|string): Promise<stri
 export const getAbiFromArtifacts = async (path: string): Promise<any[]|undefined> =>
   (await getArtifacts(path))?.abi;
 
-export const exportAbi = async (d: IDeploymentUnit) => {
+export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
 
   const outputPath = `abis/${d.contract}.json`;
   const proxyAbi = await getAbiFromArtifacts(d.contract!);
-  if (!proxyAbi)
-    throw new Error(`No ABI found for ${d.name} [${d.contract}.sol]`);
+  if (!proxyAbi) {
+    console.error(`Failed to export ABI found for ${d.name} [${d.contract}.sol]: ABI not found in artifacts`);
+    return false;
+  }
   const abiSignatures = new Set(proxyAbi.map(abiFragmentSignature));
 
   if (d.proxied?.length) {
@@ -168,14 +170,19 @@ export const exportAbi = async (d: IDeploymentUnit) => {
     }
   }
 
-  saveJson(`${config.paths!.registry}/${outputPath}`, { abi: proxyAbi });
-  console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
+  if (saveJson(`${config.paths!.registry}/${outputPath}`, { abi: proxyAbi })) {
+    console.log(`Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
+    return true;
+  }
+  console.error(`Failed to export ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry}/${outputPath}`);
+  return false;
 }
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
+  let contract: Contract;
 
   if (d.address)
     d.deployed = true;
@@ -184,60 +191,54 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     if (!d.address)
       throw new Error(`Deployment of ${d.name} rejected: marked deployed but no address provided`);
     console.log(`Skipping deployment of ${d.name} [${d.contract}.sol]: already deployed at ${d.chainId}:${d.address ?? "???"}`);
-    return new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
-  }
+    contract = new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
+  } else {
+    const chainSlug = networkById[d.chainId!].slug;
+    d.name ||= `${d.contract}-${chainSlug}`;
+    console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
+    const params = { deployer: d.deployer } as any;
+    if (d.libraries)
+      params.libraries = d.libraries;
 
-  const chainSlug = networkById[d.chainId!].slug;
-  d.name ||= `${d.contract}-${chainSlug}`;
-  console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
-  const params = { deployer: d.deployer } as any;
-  if (d.libraries)
-    params.libraries = d.libraries;
+    try {
+      const f = await ethers.getContractFactory(d.contract, params);
+      const overrides = d.overrides ?? {};
+      const args = d.args ? (d.args instanceof Array ? d.args : [d.args]) : undefined;
+      contract = (await (args ?
+        f.deploy(...args, overrides) :
+        f.deploy(overrides))) as Contract;
 
-  try {
-    const f = await ethers.getContractFactory(d.contract, params);
-    const contract = (await (d.args
-      ? ((d.args instanceof Array)
-        ? f.deploy(...d.args): f.deploy(d.args))
-      : f.deploy())) as Contract;
-
-    await contract.deployed?.();
-    (contract as any).target ??= contract.address;
-    (contract as any).address ??= contract.target; // ethers v6 polyfill
-    d.address = contract.address;
-    if (!d.address)
-      throw new Error(`Deployment of ${d.name} failed: no address returned`);
-    d.tx = contract.deployTransaction.hash;
-    d.export ??= true;
-    const isLocal = await isContractLocal(d);
-    if (!isLocal)
-      console.log(`${d.name} is a foreign contract - not exporting ABI`);
-    if (d.export && isLocal) {
-      try {
-        await exportAbi(d);
-        d.exported = true;
-      } catch (e) {
-        d.exported = false;
-        console.log(`Export failed for ${d.name}: ${e}`);
-      }
+      await contract.deployed?.();
+      (contract as any).target ??= contract.address;
+      (contract as any).address ??= contract.target; // ethers v6 polyfill
+      d.address = contract.address;
+      if (!d.address)
+        throw new Error(`no address returned`);
+      d.tx = contract.deployTransaction.hash;
+      d.export ??= true;
+      const isLocal = await isContractLocal(d);
+      if (!isLocal)
+        console.log(`${d.name} is a foreign contract - not exporting ABI`);
+      if (d.export && isLocal)
+        d.exported = await exportAbi(d);
+    } catch (e) {
+      d.deployed = false;
+      console.error(`Deployment of ${d.name} failed: ${e}`);
+      throw e;
     }
-    d.verify ??= true;
-    if (d.verify && !d.local) {
-      try {
-        const ok = await verifyContract(d);
-        d.verified = true;
-      } catch (e) {
-        d.verified = false;
-        console.log(`Verification failed for ${d.name}: ${e}`);
-      }
-    }
-    d.deployed = true;
-    return contract;
-  } catch (e) {
-    d.deployed = false;
-    console.error(`Deployment of ${d.name} failed: ${e}`);
-    throw e;
   }
+  d.verify ??= true;
+  if (d.verify && !d.local) {
+    try {
+      const ok = await verifyContract(d);
+      d.verified = true;
+    } catch (e) {
+      d.verified = false;
+      console.log(`Verification failed for ${d.name}: ${e}`);
+    }
+  }
+  d.deployed = true;
+  return contract;
 }
 
 export const loadDeployment = (d: IDeployment): IDeployment =>
@@ -367,7 +368,7 @@ export async function verifyContract(d: IDeploymentUnit) {
     console.log(`Verifying ${d.name} on ${networkById[d.chainId!].explorerApi}...`);
     await run("verify:verify", args);
     console.log("Contract verified on explorer ✅");
-    }
+  }
   d.verified = true;
   return true;
 }

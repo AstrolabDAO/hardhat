@@ -33,11 +33,13 @@ export const loadJson = (filename: string): any | undefined => {
   }
 }
 
-export const saveJson = (filename: string, data: any) => {
+export const saveJson = (filename: string, data: any): boolean => {
   try {
     fs.writeFileSync(filename, typeof data == "string" ? data : JSON.stringify(data, null, 2));
+    return true;
   } catch (e) {
     console.log(`Error saving ${filename}: ${e}`);
+    return false;
   }
 }
 
