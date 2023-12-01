@@ -97,14 +97,20 @@ export async function resetLocalNetwork(
 }
 
 export async function deployAll(d: IDeployment, update=false): Promise<IDeployment> {
+
   if (!d.name)
     throw new Error(`Missing name for deployment`);
+
   if (!d.units || !Object.values(d.units).length) {
     return await deployAll({
       name: `${d.name}-standalone`,
       contract: d.contract,
       units: { [d.name]: d } }, update);
   }
+
+  // only export if any unit is missing an address >> actual deployment
+  d.export ||= (Object.values(d.units).some(u => !u.address));
+
   for (const u of Object.values(d.units)) {
     u.deployer ??= d.deployer ?? d.provider;
     u.chainId ??= d.chainId;
@@ -119,8 +125,10 @@ export async function deployAll(d: IDeployment, update=false): Promise<IDeployme
   if (!d.deployer)
     d.deployer = Object.values(d.units)[0].deployer;
 
-  saveDeployment(d, update);
-  saveLightDeployment(d, update);
+  if (d.export) {
+    saveDeployment(d, update);
+    saveLightDeployment(d, update);
+  }
   return d;
 }
 
@@ -194,7 +202,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     contract = new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
   } else {
     const chainSlug = network.name;
-    d.name ||= `${d.contract}-${chainSlug}`;
+    d.name ||= generateContractName(d.contract, [], d.chainId);
     console.log(`Deploying ${d.name} [${d.contract}.sol] on ${chainSlug}...`);
     const params = { deployer: d.deployer } as any;
     if (d.libraries)
@@ -345,7 +353,7 @@ export async function verifyContract(d: IDeploymentUnit) {
   // }
 
   const args: IVerifiable = {
-    name: d.name,
+    name: d.contract,
     address: d.address,
   };
 
