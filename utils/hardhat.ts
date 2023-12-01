@@ -193,9 +193,9 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     console.log(`Skipping deployment of ${d.name} [${d.contract}.sol]: already deployed at ${d.chainId}:${d.address ?? "???"}`);
     contract = new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
   } else {
-    const chainSlug = networkById[d.chainId!].slug;
+    const chainSlug = network.name;
     d.name ||= `${d.contract}-${chainSlug}`;
-    console.log(`Deploying ${d.name} [${d.contract}.sol] on ${networkById[d.chainId!].slug}...`);
+    console.log(`Deploying ${d.name} [${d.contract}.sol] on ${chainSlug}...`);
     const params = { deployer: d.deployer } as any;
     if (d.libraries)
       params.libraries = d.libraries;
