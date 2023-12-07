@@ -57,13 +57,13 @@ export const setBalances = async (
   ...addresses: string[]
 ) => {
 
-  const hexAmount = BigNumber.from(amount).toHexString();
+  const hexAmount = ethers.utils.hexValue(BigNumber.from(amount));
   (network.name.includes("tenderly")) ?
     await ethers.provider.send("tenderly_setBalance", [
       addresses,
       hexAmount
     ]) : await Promise.all(addresses.map(a =>
-      ethers.provider.send("tenderly_setBalance", [
+      ethers.provider.send("hardhat_setBalance", [
         a,
         hexAmount
       ])));
