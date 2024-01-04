@@ -116,7 +116,7 @@ export async function deployAll(
   }
 
   // only export if any unit is missing an address >> actual deployment
-  d.export ||= Object.values(d.units).some((u) => !u.address);
+  d.export ??= Object.values(d.units).some((u) => !u.address);
 
   for (const u of Object.values(d.units)) {
     u.deployer ??= d.deployer ?? d.provider;
@@ -239,7 +239,11 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
           d.deployer instanceof NonceManager
             ? d.deployer
             : new NonceManager(d.deployer);
-        nonceManager.setTransactionCount(overrides.nonce);
+        const txCount = await nonceManager.getTransactionCount();
+        // NB: setTransactionCount() does not affect the nonce
+        nonceManager.incrementTransactionCount(
+          Number(overrides.nonce.toString()) - txCount
+        );
         params.signer = nonceManager;
       }
       const f = await ethers.getContractFactory(d.contract, params);
@@ -258,9 +262,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
       d.address = contract.address;
       if (!d.address) throw new Error(`no address returned`);
       d.tx = contract.deployTransaction.hash;
-      if (d.export === undefined) {
-        d.export = true;
-      }
+      d.export ??= true;
       const isLocal = await isContractLocal(d);
       if (!isLocal)
         console.log(`${d.name} is a foreign contract - not exporting ABI`);
