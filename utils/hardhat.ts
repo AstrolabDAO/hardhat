@@ -1,5 +1,6 @@
 import { Interface } from "ethers/lib/utils";
 import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
+import { NonceManager } from "@ethersproject/experimental";
 import { ethers, run, network, artifacts, tenderly } from "hardhat";
 import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
@@ -11,6 +12,7 @@ import { abiFragmentSignature, cloneDeep, nowEpochUtc, slugify } from "./format"
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
+
 
 const providers: { [name: string]: EthereumProvider } = {};
 
@@ -209,8 +211,13 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
       params.libraries = d.libraries;
 
     try {
-      const f = await ethers.getContractFactory(d.contract, params);
       const overrides = d.overrides ?? {};
+      if (overrides.nonce) {
+        const nonceManager = d.deployer instanceof NonceManager ? d.deployer : new NonceManager(d.deployer);
+        nonceManager.setTransactionCount(overrides.nonce);
+        params.signer = nonceManager;
+      }
+      const f = await ethers.getContractFactory(d.contract, params);
       const args = d.args ? (d.args instanceof Array ? d.args : [d.args]) : undefined;
       contract = (await (args ?
         f.deploy(...args, overrides) :
