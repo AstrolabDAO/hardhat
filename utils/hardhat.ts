@@ -102,7 +102,14 @@ export async function deployAll(
   d: IDeployment,
   update = false
 ): Promise<IDeployment> {
+
   if (!d.name) throw new Error(`Missing name for deployment`);
+
+  if (d.local === undefined) {
+    d.local = isLocal();
+    for (const u of Object.values(d.units ?? {}))
+      u.local = d.local;
+  }
 
   if (!d.units || !Object.values(d.units).length) {
     return await deployAll(
@@ -207,9 +214,17 @@ export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
   return false;
 };
 
+const isLocal = () => {
+  const networkName = (network.config as any)?.network ?? network.name;
+  return network.config.chainId == 31337 || ["local", "hardhat"].some((n) => networkName.includes(n));
+}
+
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
   d.chainId ??= network.config.chainId;
+
+  if (d.local === undefined) d.local = isLocal();
+
   let contract: Contract;
 
   if (d.address) d.deployed = true;
