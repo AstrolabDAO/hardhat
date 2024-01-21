@@ -61,11 +61,9 @@ const [hhNetworks, scanKeys] = networks
           network: "hardhat",
           forking: {
             enabled: !process.env.HARDHAT_FORK_URL, // if fork already exists, use it
-            // url: network.httpRpcs[0], // if fork is missing, use the selected mainnet default rpc to fork from
-            blockNumber: "latest"
+            url: network.httpRpcs[0], // if fork is missing, use the selected mainnet default rpc to fork from
           },
           port: process.env.HARDHAT_PORT || 8545,
-          url: process.env.HARDHAT_FORK_URL || `http://localhost:${process.env.HARDHAT_PORT || 8545}`,
           chainId: Number(process.env[`${slug}-hardhat-chain-id`]) || network.id,
           accounts: {
             ...accounts,
