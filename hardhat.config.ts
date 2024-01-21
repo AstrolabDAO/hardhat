@@ -36,7 +36,6 @@ const [hhNetworks, scanKeys] = networks
   .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
     const [networks, keys] = acc;
     const slug = clearNetworkTypeFromSlug(network.slug!);
-    const varname = `${slug}-scan-api-key`;
     // combination of hh network and scan customChain objects for reusability
     networks[network.slug] = {
       network: network.slug,
@@ -44,7 +43,7 @@ const [hhNetworks, scanKeys] = networks
       urls: {
         apiURL: network.explorerApi?.replace(
           "{key}",
-          process.env[varname] ?? ""
+          process.env[`${slug}-scan-api-key`] ?? ""
         ),
         browserURL: network.explorers![0],
       },
@@ -53,30 +52,31 @@ const [hhNetworks, scanKeys] = networks
     };
 
     // scan api keys
-    keys[network.slug] = process.env[varname];
+    keys[network.slug] = process.env[`${slug}-scan-api-key`];
 
     if (network.slug.includes("mainnet")) {
       // generate a local fork (transient) config for every known mainnet
-      networks[`${slug}-local`] = {
-        network: `${slug}-local`,
-        forking: {
-          enabled: true,
-          url: network.httpRpcs[0], // Mainnet URL to fork from
-          // blockNumber: "latest"
-        },
-        url: network.httpRpcs[0],
-        port: process.env.HARDHAT_PORT ?? 8545,
-        chainId: 1e12 + Number(network.id),
-        accounts: {
-          ...accounts,
-          accountsBalance: "10000000000000000000000",
-        },
-      };
+      if (Number(process.env.HARDHAT_CHAIN_ID) == network.id) {
+        networks["hardhat"] = {
+          network: "hardhat",
+          forking: {
+            enabled: !process.env.HARDHAT_FORK_URL, // if fork already exists, use it
+            url: network.httpRpcs[0], // if fork is missing, use the selected mainnet default rpc to fork from
+            // blockNumber: "latest"
+          },
+          port: process.env.HARDHAT_PORT || 8545,
+          url: process.env.HARDHAT_FORK_URL || `http://localhost:${process.env.HARDHAT_PORT || 8545}`,
+          chainId: Number(process.env[`${slug}-hardhat-chain-id`]) || network.id,
+          accounts: {
+            ...accounts,
+            accountsBalance: "100000000000000000000000",
+          },
+        };
+      }
       // check for known tenderly fork (persistent) in .env in addition to the local fork
-      const varname = `${slug}-tenderly-fork-id`;
-      const forkId = process.env[varname];
+      const forkId = process.env[`${slug}-tenderly-fork-id`];
       if (forkId && Number(process.env.TENDERLY_CHAIN_ID) == network.id) {
-        // TODO: add support for devNet
+        // TODO: add support for tenderly devNets
         networks[`tenderly`] = {
           network: `tenderly`,
           url: `https://rpc.tenderly.co/fork/${forkId}`,
