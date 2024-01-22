@@ -287,6 +287,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
       console.error(`Deployment of ${d.name} failed: ${e}`);
       throw e;
     }
+    console.log(`Successfully deployed ${d.name} at ${d.address} ✅`);
   }
   d.verify ??= true;
   if (d.verify && !d.local) {
