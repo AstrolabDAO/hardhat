@@ -36,10 +36,12 @@ const [hhNetworks, scanKeys] = networks
   .reduce((acc: [{ [slug: string]: any }, { [slug: string]: any }], network: INetwork) => {
     const [networks, keys] = acc;
     const slug = clearNetworkTypeFromSlug(network.slug!);
+    const chainId = Number(network.id);
+    const mainRpc = process.env[`${slug}-private-rpc`] || network.httpRpcs[0];
     // combination of hh network and scan customChain objects for reusability
     networks[network.slug] = {
       network: network.slug,
-      url: network.httpRpcs[0],
+      url: mainRpc,
       urls: {
         apiURL: network.explorerApi?.replace(
           "{key}",
@@ -47,7 +49,7 @@ const [hhNetworks, scanKeys] = networks
         ),
         browserURL: network.explorers![0],
       },
-      chainId: Number(network.id),
+      chainId,
       accounts,
     };
 
@@ -61,7 +63,7 @@ const [hhNetworks, scanKeys] = networks
           network: "hardhat",
           forking: {
             enabled: !process.env.HARDHAT_FORK_URL, // if fork already exists, use it
-            url: process.env.HARDHAT_FORK_URL || network.httpRpcs[0], // if fork is missing, use the selected mainnet default rpc to fork from
+            url: process.env.HARDHAT_FORK_URL || mainRpc, // if fork is missing, use the selected mainnet default rpc to fork from
           },
           port: process.env.HARDHAT_PORT || 8545,
           chainId: Number(process.env[`${slug}-hardhat-chain-id`]) || network.id,
