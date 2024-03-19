@@ -12,6 +12,7 @@ dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
 
 if (!process.env?.TEST_MNEMONIC) throw new Error("missing env.TEST_MNEMONIC");
+const tenderlyMode = process.env.TENDERLY_MODE ?? "fork"; // fork, testnet, devnet
 
 process.env.REGISTRY_DIR ??= "./registry";
 
@@ -79,10 +80,10 @@ const [hhNetworks, scanKeys] = networks
         // TODO: add support for tenderly devNets
         networks[`tenderly`] = {
           network: `tenderly`,
-          url: `https://rpc.tenderly.co/fork/${forkId}`,
+          url: tenderlyMode == "fork" ? `https://rpc.tenderly.co/fork/${forkId}` : `https://virtual.arbitrum.rpc.tenderly.co/${forkId}`,
           urls: {
             apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
-            browserURL: `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions`,
+            browserURL: tenderlyMode == "fork" ? `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions` : `https://dashboard.tenderly.co/explorer/vnet/${forkId}/transactions`,
           },
           chainId:
             Number(process.env[`${slug}-tenderly-chain-id`]) || network.id,
