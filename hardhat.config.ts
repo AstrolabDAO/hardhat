@@ -77,10 +77,15 @@ const [hhNetworks, scanKeys] = networks
       // check for known tenderly fork (persistent) in .env in addition to the local fork
       const forkId = process.env[`${slug}-tenderly-fork-id`];
       if (forkId && Number(process.env.TENDERLY_CHAIN_ID) == network.id) {
+        let tenderlyChainSlug = slug;
+        switch (slug) {
+          case "binance": tenderlyChainSlug = "bnb-chain"; break;
+          case "gnosis": tenderlyChainSlug = "gnosis-chain"; break;
+        }
         // TODO: add support for tenderly devNets
         networks[`tenderly`] = {
           network: `tenderly`,
-          url: tenderlyMode == "fork" ? `https://rpc.tenderly.co/fork/${forkId}` : `https://virtual.arbitrum.rpc.tenderly.co/${forkId}`,
+          url: tenderlyMode == "fork" ? `https://rpc.tenderly.co/fork/${forkId}` : `https://virtual.${tenderlyChainSlug}.rpc.tenderly.co/${forkId}`,
           urls: {
             apiURL: "", // https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}
             browserURL: tenderlyMode == "fork" ? `https://dashboard.tenderly.co/shared/fork/${forkId}/transactions` : `https://dashboard.tenderly.co/explorer/vnet/${forkId}/transactions`,
