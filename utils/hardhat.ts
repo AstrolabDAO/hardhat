@@ -1,28 +1,25 @@
-import { Interface } from "ethers/lib/utils";
-import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
-import { ethers, run, network, artifacts, tenderly } from "hardhat";
-import { Network, HttpNetworkConfig, EthereumProvider } from "hardhat/types";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
+import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
+import { artifacts, ethers, network, run, tenderly } from "hardhat";
+import { EthereumProvider, HttpNetworkConfig } from "hardhat/types";
 
+import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
+import { createProvider } from "hardhat/internal/core/providers/construction";
+import { config } from "../hardhat.config";
+import { networkById } from "../networks";
 import {
   IArtifact,
   IDeployment,
   IDeploymentUnit,
-  INetwork,
-  IVerifiable,
+  IVerifiable
 } from "../types";
-import { config, setBalance } from "../hardhat.config";
-import { getNetwork, networkById } from "../networks";
 import {
   abiFragmentSignature,
-  cloneDeep,
   nowEpochUtc,
-  slugify,
+  slugify
 } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
-import { createProvider } from "hardhat/internal/core/providers/construction";
-import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
 
 const providers: { [name: string]: EthereumProvider } = {};
 
@@ -229,6 +226,8 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 
   if (d.address) d.deployed = true;
 
+  const abi = loadAbi(d.contract) as any[] ?? [];
+
   if (d.deployed) {
     if (!d.address)
       throw new Error(
@@ -239,7 +238,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         d.contract
       }.sol]: already deployed at ${d.chainId}:${d.address ?? "???"}`
     );
-    contract = new Contract(d.address, loadAbi(d.contract) ?? [], d.deployer);
+    contract = new Contract(d.address, abi, d.deployer);
   } else {
     const chainSlug = network.name;
     d.name ||= generateContractName(d.contract, [], d.chainId);
@@ -261,17 +260,56 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         );
         params.signer = nonceManager;
       }
-      const f = await ethers.getContractFactory(d.contract, params);
-      const args = d.args
+      const factory = await ethers.getContractFactory(d.contract, params);
+      const args = (d.args
         ? d.args instanceof Array
           ? d.args
           : [d.args]
-        : undefined;
-      contract = (await (args
-        ? f.deploy(...args, overrides)
-        : f.deploy(overrides))) as Contract;
+        : undefined) as any[];
 
-      await contract.deployed?.();
+      if (d.useCreate3) {
+        // d.create3Salt ??= ethers.utils.hexlify(d.name); // defaults to contract name
+        if (!d.create3Salt)
+            throw new Error(`Missing salt for Create3 deployment`);
+
+        const c3deployer = new ethers.Contract(
+          networkById[d.chainId!].create3Deployer!,
+          [
+            "function deploy(bytes32,bytes) external returns (address)",
+            "function deployedAddress(bytes,address,bytes32) view returns (address)"
+          ], d.deployer);
+
+        const salt = ethers.utils.formatBytes32String(d.create3Salt); // ethers.utils.hexZeroPad(BigNumber.from(d.create3Salt), 32);
+
+        // encode bytecode constructor arguments
+        const constructorTypes = args ? abi.find((frag: any) => frag.type === 'constructor')?.inputs : [];
+        // ensure libraries are linked in the bytecode
+        let linkedBytecode = factory.bytecode;
+        if (d.libraries) {
+          for (const [libName, libAddress] of Object.entries(d.libraries)) {
+            const regex = new RegExp(`__${libName}_+`, "g");
+            linkedBytecode = linkedBytecode.replace(regex, libAddress.replace("0x", ""));
+          }
+        }
+
+        const creationCode = ethers.utils.solidityPack(
+          ["bytes", "bytes"],
+          [linkedBytecode, ethers.utils.defaultAbiCoder.encode(constructorTypes, args)]
+        );
+
+        const deployedAddress = await c3deployer
+          .deploy(creationCode, salt, overrides)
+          .then((tx: any) => tx.wait());
+        if (await c3deployer.deployedAddress(creationCode, salt, d.deployer) !== deployedAddress) {
+          throw new Error(`Create3 deployment failed: address mismatch`);
+        }
+        contract = new Contract(deployedAddress, abi, d.deployer);
+      } else {
+        contract = (await (args
+          ? factory.deploy(...args, overrides)
+          : factory.deploy(overrides))) as Contract;
+        await contract.deployed?.();
+      }
       (contract as any).target ??= contract.address;
       (contract as any).address ??= contract.target; // ethers v6 polyfill
       d.address = contract.address;

@@ -104,12 +104,14 @@ const [hhNetworks, scanKeys] = networks
 const config = {
   solidity: {
     compilers: [{
-      version: "0.8.20",
+      version: "0.8.22",
       settings: {
         optimizer: {
           enabled: true,
-          runs: 100,
+          runs: 200,
         },
+        viaIR: false,
+        evmVersion: "paris",
       }
     }]
   } as SolidityConfig,
@@ -147,3 +149,4 @@ const config = {
 } as Partial<ExtendedHardhatConfig>;
 
 export { tenderly, config };
+export default config;

@@ -23,8 +23,9 @@ export interface IDeploymentUnit {
   verified?: boolean;
   libraries?: Record<string, string>;
   proxied?: string[];
-  // tx overrides
-  overrides?: Overrides;
+  useCreate3?: boolean; // for deterministic deployment
+  create3Salt?: string; // replaces create2 bytecode+args as contract signature
+  overrides?: Overrides; // tx overrides
 }
 
 export interface INetwork {
@@ -35,6 +36,7 @@ export interface INetwork {
   id: number;
   lzId?: number;
   lzEndpoint?: string;
+  create3Deployer?: string;
   defiLlamaId?: string;
   httpRpcs: string[];
   wsRpcs?: string[];

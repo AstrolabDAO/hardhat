@@ -6,6 +6,7 @@
     "id": 1,
     "lzId": 1,
     "lzEndpoint": "0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Ethereum",
     "httpRpcs": [
       "https://api.securerpc.com/v1",
@@ -28,6 +29,7 @@
     "id": 5,
     "lzId": 10121,
     "lzEndpoint": "0xbfD2135BFfbb0B5378b56643c2Df8a87552Bfa23",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://eth-goerli.public.blastapi.io",
@@ -46,6 +48,7 @@
     "id": 10,
     "lzId": 111,
     "lzEndpoint": "0x3c2269811836af69497E5F486A85D7316753cf62",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Optimism",
     "httpRpcs": [
       "https://optimism-mainnet.public.blastapi.io",
@@ -68,6 +71,7 @@
     "id": 420,
     "lzId": 10132,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://optimism-goerli.public.blastapi.io",
@@ -89,6 +93,7 @@
     "id": 42161,
     "lzId": 110,
     "lzEndpoint": "0x3c2269811836af69497E5F486A85D7316753cf62",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Arbitrum",
     "httpRpcs": [
       "https://arbitrum-one.public.blastapi.io",
@@ -111,6 +116,7 @@
     "id": 421613,
     "lzId": 10143,
     "lzEndpoint": "0x6aB5Ae6822647046626e83ee6dB8187151E1d5ab",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://arbitrum-goerli.public.blastapi.io",
@@ -131,6 +137,7 @@
     "id": 137,
     "lzId": 109,
     "lzEndpoint": "0x3c2269811836af69497E5F486A85D7316753cf62",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Polygon",
     "httpRpcs": [
       "https://polygon-mainnet.public.blastapi.io",
@@ -153,6 +160,7 @@
     "id": 80001,
     "lzId": 10109,
     "lzEndpoint": "0xf69186dfBa60DdB133E91E9A4B5673624293d8F8",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://polygon-testnet.public.blastapi.io",
@@ -174,6 +182,7 @@
     "id": 43114,
     "lzId": 106,
     "lzEndpoint": "0x3c2269811836af69497E5F486A85D7316753cf62",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Avalanche",
     "httpRpcs": [
       "https://ava-mainnet.public.blastapi.io/ext/bc/C/rpc",
@@ -192,6 +201,7 @@
     "id": 43113,
     "lzId": 10106,
     "lzEndpoint": "0x93f54D755A063cE7bB9e6Ac47Eccc8e33411d706",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://ava-testnet.public.blastapi.io/ext/bc/C/rpc",
@@ -212,6 +222,7 @@
     "id": 250,
     "lzId": 112,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Fantom",
     "httpRpcs": [
       "https://rpc.fantom.network",
@@ -235,6 +246,7 @@
     "id": 4002,
     "lzId": 10112,
     "lzEndpoint": "0x7dcAD72640F835B0FA36EFD3D6d3ec902C7E5acf",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://fantom-testnet.public.blastapi.io",
@@ -256,6 +268,7 @@
     "id": 56,
     "lzId": 2,
     "lzEndpoint": "0x3c2269811836af69497E5F486A85D7316753cf62",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "BSC",
     "httpRpcs": [
       "https://bsc-mainnet.public.blastapi.io",
@@ -278,6 +291,7 @@
     "id": 97,
     "lzId": 10102,
     "lzEndpoint": "0x6Fcb97553D41516Cb228ac03FdC8B9a0a9df04A1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://bsc-testnet.public.blastapi.io",
@@ -298,6 +312,7 @@
     "id": 1284,
     "lzId": 126,
     "lzEndpoint": "0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Moonbeam",
     "httpRpcs": [
       "https://moonbeam.public.blastapi.io",
@@ -319,6 +334,7 @@
     "id": 1285,
     "lzId": 167,
     "lzEndpoint": "0x7004396C99D5690da76A7C59057C5f3A53e01704",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Moonriver",
     "httpRpcs": [
       "https://moonriver.public.blastapi.io",
@@ -339,6 +355,7 @@
     "id": 1287,
     "lzId": 10126,
     "lzEndpoint": "0xb23b28012ee92E8dE39DEb57Af31722223034747",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://moonbase-alpha.public.blastapi.io",
@@ -359,6 +376,7 @@
     "id": 100,
     "lzId": 145,
     "lzEndpoint": "0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "xDai",
     "httpRpcs": [
       "https://gnosis-mainnet.public.blastapi.io",
@@ -383,6 +401,7 @@
     "id": 10200,
     "lzId": 10145,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://gnosis-chiado.public.blastapi.io",
@@ -404,6 +423,7 @@
     "id": 1101,
     "lzId": 158,
     "lzEndpoint": "0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Polygon zkEVM",
     "httpRpcs": [
       "https://polygon-zkevm-mainnet.public.blastapi.io",
@@ -421,6 +441,7 @@
     "id": 1442,
     "lzId": 10158,
     "lzEndpoint": "0x6aB5Ae6822647046626e83ee6dB8187151E1d5ab",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://polygon-zkevm-testnet.public.blastapi.io",
@@ -437,6 +458,7 @@
     "id": 324,
     "lzId": 165,
     "lzEndpoint": "0x9b896c0e23220469C7AE69cb4BbAE391eAa4C8da",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "zkSync Era",
     "httpRpcs": ["https://mainnet.era.zksync.io"],
     "wsRpcs": [],
@@ -450,6 +472,7 @@
     "id": 280,
     "lzId": 10165,
     "lzEndpoint": "0x093D2CF57f764f09C3c2Ac58a42A2601B8C79281",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://testnet.era.zksync.dev"],
     "wsRpcs": [],
@@ -463,6 +486,7 @@
     "id": 8453,
     "lzId": 184,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Base",
     "httpRpcs": [
       "https://base-mainnet.public.blastapi.io",
@@ -480,6 +504,7 @@
     "id": 84531,
     "lzId": 10160,
     "lzEndpoint": "0x6aB5Ae6822647046626e83ee6dB8187151E1d5ab",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://base-goerli.public.blastapi.io",
@@ -500,6 +525,7 @@
     "id": 2222,
     "lzId": 177,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Kava",
     "httpRpcs": ["https://evm.kava.io", "https://evm2.kava.io"],
     "wsRpcs": ["wss://wevm.kava.io", "wss://wevm2.kava.io"],
@@ -517,6 +543,7 @@
     "id": 2221,
     "lzId": 10172,
     "lzEndpoint": "0x8b14D287B4150Ff22Ac73DF8BE720e933f659abc",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://evm.testnet.kava.io"],
     "wsRpcs": ["wss://wevm.testnet.kava.io"],
@@ -530,6 +557,7 @@
     "id": 7700,
     "lzId": 159,
     "lzEndpoint": "0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Canto",
     "httpRpcs": ["https://canto.gravitychain.io", "https://canto.neobase.one"],
     "wsRpcs": [],
@@ -543,6 +571,7 @@
     "id": 7701,
     "lzId": 10159,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://canto-testnet.plexnode.wtf"],
     "wsRpcs": [],
@@ -556,6 +585,7 @@
     "id": 534352,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Scroll",
     "httpRpcs": [
       "https://rpc.scroll.io",
@@ -573,6 +603,7 @@
     "id": 534353,
     "lzId": 10170,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://scroll-sepolia.public.blastapi.io",
@@ -590,6 +621,7 @@
     "id": 1088,
     "lzId": 151,
     "lzEndpoint": "0x9740FF91F1985D8d2B71494aE1A2f723bb3Ed9E4",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Metis",
     "httpRpcs": [
       "https://mantle-mainnet.public.blastapi.io",
@@ -606,6 +638,7 @@
     "id": 588,
     "lzId": 10151,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://goerli.gateway.metisdevops.link"],
     "wsRpcs": [],
@@ -619,6 +652,7 @@
     "id": 5000,
     "lzId": 181,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Mantle",
     "httpRpcs": [
       "https://mantle-mainnet.public.blastapi.io",
@@ -635,6 +669,7 @@
     "id": 5001,
     "lzId": 10181,
     "lzEndpoint": "0x2cA20802fd1Fd9649bA8Aa7E50F0C82b479f35fe",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://rpc.goerli.linea.build"],
     "wsRpcs": [],
@@ -651,6 +686,7 @@
     "id": 59144,
     "lzId": 183,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Linea",
     "httpRpcs": [
       "https://linea.blockpi.network/v1/rpc/public",
@@ -667,6 +703,7 @@
     "id": 59140,
     "lzId": 10157,
     "lzEndpoint": "0x6aB5Ae6822647046626e83ee6dB8187151E1d5ab",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://rpc.goerli.linea.build"],
     "wsRpcs": ["wss://rpc.goerli.linea.build"],
@@ -683,6 +720,7 @@
     "id": 42220,
     "lzId": 125,
     "lzEndpoint": "0x3A73033C0b1407574C76BdBAc67f126f6b4a9AA9",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Celo",
     "httpRpcs": ["https://rpc.ankr.com/celo", "https://forno.celo.org"],
     "wsRpcs": ["wss://forno.celo.org/ws"],
@@ -696,6 +734,7 @@
     "id": 44787,
     "lzId": 10125,
     "lzEndpoint": "0xae92d5aD7583AD66E49A0c67BAd18F6ba52dDDc1",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://alfajores-forno.celo-testnet.org"],
     "wsRpcs": ["wss://alfajores-forno.celo-testnet.org/ws"],
@@ -712,6 +751,7 @@
     "id": 1313161554,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Aurora",
     "httpRpcs": [
       "https://endpoints.omniatech.io/v1/aurora/mainnet/public",
@@ -728,6 +768,7 @@
     "id": 1313161555,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://endpoints.omniatech.io/v1/aurora/testnet/public",
@@ -744,6 +785,7 @@
     "id": 245022934,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Neon",
     "httpRpcs": [
       "https://neon-proxy-mainnet.solana.p2p.org",
@@ -760,6 +802,7 @@
     "id": 245022940,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://testnet.neonevm.org"],
     "wsRpcs": [],
@@ -773,6 +816,7 @@
     "id": 57,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Syscoin",
     "httpRpcs": [
       "https://rpc.syscoin.org",
@@ -790,6 +834,7 @@
     "id": 5700,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://rpc.tanenbaum.io",
@@ -806,6 +851,7 @@
     "id": 570,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Rollux",
     "httpRpcs": [
       "https://rpc.rollux.com",
@@ -823,6 +869,7 @@
     "id": 57000,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://rpc-tanenbaum.rollux.com",
@@ -839,6 +886,7 @@
     "id": 30,
     "lzId": 0,
     "lzEndpoint": "",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Rootstock",
     "httpRpcs": ["https://public-node.rsk.co", "https://mycrypto.rsk.co"],
     "wsRpcs": [],
@@ -855,6 +903,7 @@
     "id": 34443,
     "lzId": 30260,
     "lzEndpoint": "0x1a44076050125825900e736c501f859c50fE728c",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://mainnet.mode.network", "https://mode.drpc.org"],
     "wsRpcs": ["wss://mode.drpc.org"],
@@ -868,6 +917,7 @@
     "id": 919,
     "lzId": 40260,
     "lzEndpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": ["https://sepolia.mode.network"],
     "wsRpcs": [],
@@ -881,6 +931,7 @@
     "id": 81457,
     "lzId": 243,
     "lzEndpoint": "0xb6319cC6c8c27A8F5dAF0dD3DF91EA35C4720dd7",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "Blast",
     "httpRpcs": ["https://rpc.blast.io", "https://rpc.ankr.com/blast"],
     "wsRpcs": [],
@@ -894,6 +945,7 @@
     "id": 168587773,
     "lzId": 10243,
     "lzEndpoint": "0x2cA20802fd1Fd9649bA8Aa7E50F0C82b479f35fe",
+    "create3Deployer": "0x6513Aedb4D1593BA12e50644401D976aebDc90d8",
     "defiLlamaId": "",
     "httpRpcs": [
       "https://sepolia.blast.io",
