@@ -166,7 +166,7 @@ export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
 
   if (d.proxied?.length) {
     for (const p of d.proxied) {
-      const implAbi = loadAbi(p) as unknown[];
+      const implAbi = await loadAbi(p) as unknown[];
       if (!implAbi) {
         console.error(
           `Proxy ABI error: ${p} implementation ABI not found - skipping`
@@ -218,7 +218,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 
   if (d.address) d.deployed = true;
 
-  const abi = (loadAbi(d.contract) as any[]) ?? [];
+  const abi = (await loadAbi(d.contract) as any[]) ?? [];
 
   if (d.deployed) {
     if (!d.address)
@@ -350,8 +350,8 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 export const loadDeployment = (d: IDeployment): IDeployment =>
   loadLatestJson(config.paths!.registry, d.name) as IDeployment;
 
-export const loadAbi = (name: string): ContractInterface | undefined =>
-  loadJson(`${config.paths!.registry}/abis/${name}.json`)?.abi;
+export const loadAbi = async (name: string): Promise<ContractInterface> =>
+  loadJson(`${config.paths!.registry}/abis/${name}.json`)?.abi ?? await getAbiFromArtifacts(name) ?? [];
 
 // loads a single contract deployment unit
 export const loadDeploymentUnit = (
@@ -359,7 +359,7 @@ export const loadDeploymentUnit = (
   name: string
 ): IDeploymentUnit | undefined => loadDeployment(d)?.units?.[name];
 
-export const getDeployedContract = (d: IDeployment, name: string): Contract => {
+export const getDeployedContract = async (d: IDeployment, name: string): Promise<Contract> => {
   const u = loadDeploymentUnit(d, name)!;
   if (!u?.contract) throw new Error(`${d.slug}[${u.slug}] missing contract`);
   const deployer = u.deployer ?? u.provider ?? d.deployer ?? d.provider;
@@ -367,7 +367,7 @@ export const getDeployedContract = (d: IDeployment, name: string): Contract => {
     throw new Error(
       `${d.slug}[${u.slug}] missing address, contract, abi or deployer`
     );
-  const abi = loadAbi(u.contract);
+  const abi = await loadAbi(u.contract);
   if (!abi) throw new Error(`${d.slug}[${u.slug}] missing ABI`);
   return new Contract(u.address, abi, deployer);
 };
