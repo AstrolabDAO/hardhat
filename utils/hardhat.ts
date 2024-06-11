@@ -8,17 +8,8 @@ import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { config } from "../hardhat.config";
 import { networkById } from "../networks";
-import {
-  IArtifact,
-  IDeployment,
-  IDeploymentUnit,
-  IVerifiable
-} from "../types";
-import {
-  abiFragmentSignature,
-  nowEpochUtc,
-  slugify
-} from "./format";
+import { IArtifact, IDeployment, IDeploymentUnit, IVerifiable } from "../types";
+import { abiFragmentSignature, nowEpochUtc, slugify } from "./format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
 
 const providers: { [name: string]: EthereumProvider } = {};
@@ -99,13 +90,11 @@ export async function deployAll(
   d: IDeployment,
   update = false
 ): Promise<IDeployment> {
-
   if (!d.name) throw new Error(`Missing name for deployment`);
 
   if (d.local === undefined) {
     d.local = isLocal();
-    for (const u of Object.values(d.units ?? {}))
-      u.local = d.local;
+    for (const u of Object.values(d.units ?? {})) u.local = d.local;
   }
 
   if (!d.units || !Object.values(d.units).length) {
@@ -213,8 +202,11 @@ export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
 
 const isLocal = () => {
   const networkName = (network.config as any)?.network ?? network.name;
-  return network.config.chainId == 31337 || ["local", "hardhat"].some((n) => networkName.includes(n));
-}
+  return (
+    network.config.chainId == 31337 ||
+    ["local", "hardhat"].some((n) => networkName.includes(n))
+  );
+};
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.deployer ??= (await ethers.getSigners())[0] as Signer;
@@ -226,7 +218,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
 
   if (d.address) d.deployed = true;
 
-  const abi = loadAbi(d.contract) as any[] ?? [];
+  const abi = (loadAbi(d.contract) as any[]) ?? [];
 
   if (d.deployed) {
     if (!d.address)
@@ -254,67 +246,81 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
             ? d.deployer
             : new NonceManager(d.deployer);
         const txCount = await nonceManager.getTransactionCount();
-        // NB: setTransactionCount() does not affect the nonce
         nonceManager.incrementTransactionCount(
           Number(overrides.nonce.toString()) - txCount
         );
         params.signer = nonceManager;
       }
       const factory = await ethers.getContractFactory(d.contract, params);
-      const args = (d.args
-        ? d.args instanceof Array
-          ? d.args
-          : [d.args]
-        : undefined) as any[];
+      const args = (
+        d.args ? (d.args instanceof Array ? d.args : [d.args]) : undefined
+      ) as any[];
+      const hasArgs = args && args.length > 0;
 
       if (d.useCreate3) {
-        // d.create3Salt ??= ethers.utils.hexlify(d.name); // defaults to contract name
         if (!d.create3Salt)
-            throw new Error(`Missing salt for Create3 deployment`);
+          throw new Error(`Missing salt for Create3 deployment`);
 
         const c3deployer = new ethers.Contract(
           networkById[d.chainId!].create3Deployer!,
           [
-            "function deploy(bytes32,bytes) external returns (address)",
-            "function deployedAddress(bytes,address,bytes32) view returns (address)"
-          ], d.deployer);
-
-        const salt = ethers.utils.formatBytes32String(d.create3Salt); // ethers.utils.hexZeroPad(BigNumber.from(d.create3Salt), 32);
-
-        // encode bytecode constructor arguments
-        const constructorTypes = args ? abi.find((frag: any) => frag.type === 'constructor')?.inputs : [];
-        // ensure libraries are linked in the bytecode
-        let linkedBytecode = factory.bytecode;
-        if (d.libraries) {
-          for (const [libName, libAddress] of Object.entries(d.libraries)) {
-            const regex = new RegExp(`__${libName}_+`, "g");
-            linkedBytecode = linkedBytecode.replace(regex, libAddress.replace("0x", ""));
-          }
-        }
-
-        const creationCode = ethers.utils.solidityPack(
-          ["bytes", "bytes"],
-          [linkedBytecode, ethers.utils.defaultAbiCoder.encode(constructorTypes, args)]
+            "function deployCreate3(bytes32,bytes) external returns (address)",
+            "function computeCreate3Address(bytes32) view returns (address)",
+            "function computeCreate3Address(bytes32,address) view returns (address)",
+          ],
+          d.deployer
         );
 
-        const deployedAddress = await c3deployer
-          .deploy(creationCode, salt, overrides)
-          .then((tx: any) => tx.wait());
-        if (await c3deployer.deployedAddress(creationCode, salt, d.deployer) !== deployedAddress) {
-          throw new Error(`Create3 deployment failed: address mismatch`);
+        let salt;
+        switch (d.create3Salt.length) {
+          case 32: salt = ethers.utils.toUtf8Bytes(d.create3Salt); break;
+          case 64: salt = ethers.utils.arrayify(`0x${d.create3Salt}`); break;
+          case 66: salt = ethers.utils.arrayify(d.create3Salt); break;
+          default:
+            throw new Error(`Invalid salt length: ${d.create3Salt.length}`);
         }
+
+        const constructorTypes = hasArgs
+          ? abi.find((frag: any) => frag.type === "constructor")?.inputs
+          : [];
+        let linkedBytecode = factory.bytecode;
+        if (d.libraries && Object.keys(d.libraries).length > 0) {
+          for (const [libName, libAddress] of Object.entries(d.libraries)) {
+            const regex = new RegExp(`__${libName}_+`, "g");
+            linkedBytecode = linkedBytecode.replace(
+              regex,
+              libAddress.replace("0x", "")
+            );
+          }
+        }
+        const creationCode = ethers.utils.solidityPack(
+          ["bytes", "bytes"],
+          [
+            linkedBytecode,
+            ethers.utils.defaultAbiCoder.encode(constructorTypes, args ?? []),
+          ]
+        );
+
+        const receipt = await c3deployer
+          .deployCreate3(salt, creationCode, overrides)
+          .then((tx: any) => tx.wait());
+        const eventData = receipt.events.slice(-1)[0].topics.slice(-1)[0];
+        const deployedAddress = "0x" + eventData.slice(26);
         contract = new Contract(deployedAddress, abi, d.deployer);
+        (<any>contract).deployTransaction = receipt;
       } else {
-        contract = (await (args
+        contract = (await (hasArgs
           ? factory.deploy(...args, overrides)
           : factory.deploy(overrides))) as Contract;
         await contract.deployed?.();
       }
-      (contract as any).target ??= contract.address;
-      (contract as any).address ??= contract.target; // ethers v6 polyfill
+      (<any>contract).target ??= contract.address;
+      (<any>contract).address ??= contract.target;
       d.address = contract.address;
       if (!d.address) throw new Error(`no address returned`);
-      d.tx = contract.deployTransaction.hash;
+      d.tx =
+        contract.deployTransaction?.hash ??
+        (contract.deployTransaction as any)?.transactionHash;
       d.export ??= true;
       const isLocal = await isContractLocal(d);
       if (!isLocal)

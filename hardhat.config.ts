@@ -11,13 +11,16 @@ import { HardhatConfig, NetworksConfig, ProjectPathsConfig, SolidityConfig } fro
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
 
-if (!process.env?.TEST_MNEMONIC) throw new Error("missing env.TEST_MNEMONIC");
+const [mnemonic, pkeys] = [process.env?.TEST_MNEMONIC, process.env?.TEST_PKEYS?.split(",")];
+if (!mnemonic && !pkeys) {
+  throw new Error("No test mnemonic or private keys found in the environment");
+}
 const tenderlyMode = process.env.TENDERLY_MODE ?? "fork"; // fork, testnet, devnet
-
 process.env.REGISTRY_DIR ??= "./registry";
 
 const accounts = {
-  mnemonic: process.env?.TEST_MNEMONIC,
+  ...mnemonic && { mnemonic },
+  ...pkeys && { accounts: pkeys },
   // path: "m/44'/60'/0'/0",
   // initialIndex: 0,
   // count: 20,
