@@ -251,7 +251,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         );
         params.signer = nonceManager;
       }
-      const factory = await ethers.getContractFactory(d.contract, params);
+      const factory = d.create3Bytecode ? null : await ethers.getContractFactory(d.contract, params);
       const args = (
         d.args ? (d.args instanceof Array ? d.args : [d.args]) : undefined
       ) as any[];
@@ -283,7 +283,9 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         const constructorTypes = hasArgs
           ? abi.find((frag: any) => frag.type === "constructor")?.inputs
           : [];
-        let linkedBytecode = factory.bytecode;
+        let linkedBytecode = d.create3Bytecode ?? factory?.bytecode;
+        if (!linkedBytecode)
+          throw new Error(`Missing bytecode for Create3 deployment`);
         if (d.libraries && Object.keys(d.libraries).length > 0) {
           for (const [libName, libAddress] of Object.entries(d.libraries)) {
             const regex = new RegExp(`__${libName}_+`, "g");
@@ -310,8 +312,8 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         (<any>contract).deployTransaction = receipt;
       } else {
         contract = (await (hasArgs
-          ? factory.deploy(...args, overrides)
-          : factory.deploy(overrides))) as Contract;
+          ? factory!.deploy(...args, overrides)
+          : factory!.deploy(overrides))) as Contract;
         await contract.deployed?.();
       }
       (<any>contract).target ??= contract.address;

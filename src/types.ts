@@ -25,6 +25,7 @@ export interface IDeploymentUnit {
   proxied?: string[];
   useCreate3?: boolean; // for deterministic deployment
   create3Salt?: string; // replaces create2 bytecode+args as contract signature
+  create3Bytecode?: string; // replaces contract bytecode
   overrides?: Overrides; // tx overrides
 }
 
