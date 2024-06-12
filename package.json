@@ -1,6 +1,6 @@
 {
   "name": "@astrolabs/hardhat",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/AstrolabFinance/hardhat",
@@ -13,9 +13,9 @@
     "smart-contract"
   ],
   "scripts": {
-    "build": "rm -rf ./dist && tsc --build . && cp *.yaml ./dist",
+    "build": "rm -rf ./dist/* && tsc --build",
     "clean": "rm -rf node_modules && rm -rf dist",
-    "pub": "yarn build && npm publish --access public"
+    "pub": "yarn build && yarn publish --access public"
   },
   "files": [
     "dist/",
