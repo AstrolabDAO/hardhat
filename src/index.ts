@@ -7,10 +7,10 @@ import { EthereumProvider, HttpNetworkConfig } from "hardhat/types";
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { config } from "../hardhat.config";
-import { networkById } from "../networks";
-import { IArtifact, IDeployment, IDeploymentUnit, IVerifiable } from "../types";
-import { abiFragmentSignature, nowEpochUtc, slugify } from "./format";
-import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./fs";
+import { networkById } from "./networks";
+import { IArtifact, IDeployment, IDeploymentUnit, IVerifiable } from "./types";
+import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
+import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
 
 const providers: { [name: string]: EthereumProvider } = {};
 

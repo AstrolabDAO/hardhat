@@ -3,10 +3,11 @@ export * from "@nomiclabs/hardhat-etherscan";
 export * from "@nomicfoundation/hardhat-network-helpers";
 import * as tenderly from "@tenderly/hardhat-tenderly";
 import * as dotenv from "dotenv";
-import { INetwork } from "./types";
-import { networks } from "./networks";
-import { clearNetworkTypeFromSlug } from "./utils/format";
 import { HardhatConfig, NetworksConfig, ProjectPathsConfig, SolidityConfig } from "hardhat/types";
+
+import { INetwork } from "./src/types";
+import { networks } from "./src/networks";
+import { clearNetworkTypeFromSlug } from "./src/utils/format";
 
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
