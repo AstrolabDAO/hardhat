@@ -5,7 +5,7 @@ let [networkById, networkBySlug] = [{}, {}] as [{ [id: number]: INetwork }, { [s
 
 async function loadNetworks() {
   try {
-    const res = await fetch('https://assets.astrolab.fi/data/networks.json'); // always updated
+    const res = await fetch('https://cdn.astrolab.fi/data/networks.json'); // always updated
     networkById = await res.json();
   } catch (e) {
     console.error('Failed to fetch networks from astrolab static server', e);
