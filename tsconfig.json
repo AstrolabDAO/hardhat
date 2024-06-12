@@ -19,8 +19,8 @@
     "baseUrl": "./",
     "types": [],
     "lib": ["dom", "es6", "es2021", "esnext"],
-    "plugins": [],
+    "plugins": []
   },
-  "include": ["**/*.ts", "**/*.js", "**/*.json", "**/*.yaml"],
+  "include": ["*.ts", "*.js", "networks.json"],
   "exclude": ["node_modules", "dist", "cache", "artifacts", "deployments"]
 }
