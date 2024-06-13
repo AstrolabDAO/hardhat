@@ -4,3 +4,4 @@ cache
 .env
 *lock*
 artifacts
+yarn-error.log

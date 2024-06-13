@@ -1,15 +1,15 @@
 import { INetwork } from "./types";
+const sfetch = require('sync-fetch')
 
-let networks: INetwork[];
+let networks: INetwork[] = [];
 let [networkById, networkBySlug] = [{}, {}] as [{ [id: number]: INetwork }, { [slug: string]: INetwork }];
 
-async function loadNetworks() {
+function loadNetworks() {
   try {
-    const res = await fetch('https://cdn.astrolab.fi/data/networks.json'); // always updated
-    networkById = await res.json();
+    networks = sfetch('https://cdn.astrolab.fi/data/networks.json').json(); // always updated
   } catch (e) {
     console.error('Failed to fetch networks from astrolab static server', e);
-    networkById = require('../networks.json');
+    networks = require('../networks.json');
   }
   networks.forEach(n => n.id = Number(n.id));
   [networkById, networkBySlug] = networks.reduce((acc, network) => {
@@ -19,16 +19,12 @@ async function loadNetworks() {
   return networks;
 }
 
-const getNetwork = async (network: INetwork|string|number): Promise<INetwork> => {
-  if (!networks?.length) {
-    networks = await loadNetworks();
-  }
-  return typeof network === 'string' ? networkBySlug[network]
+const getNetwork = (network: INetwork|string|number): INetwork =>
+  typeof network === 'string' ? networkBySlug[network]
     : typeof network === 'number' ? networkById[network]
       : network;
-}
 
-(async () => await loadNetworks())();
+loadNetworks();
 
 export {
   networks,
