@@ -19,13 +19,10 @@ if (!mnemonic && !pkeys) {
 const tenderlyMode = process.env.TENDERLY_MODE ?? "fork"; // fork, testnet, devnet
 process.env.REGISTRY_DIR ??= "./registry";
 
-const accounts = {
-  ...mnemonic && { mnemonic },
-  ...pkeys && { accounts: pkeys },
-  // path: "m/44'/60'/0'/0",
-  // initialIndex: 0,
-  // count: 20,
-};
+const accounts = mnemonic ? { mnemonic } : pkeys;
+// path: "m/44'/60'/0'/0",
+// initialIndex: 0,
+// count: 20,
 
 interface ExtendedHardhatConfig extends HardhatConfig {
   defaultNetwork: string;
