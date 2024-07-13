@@ -3,14 +3,32 @@ import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
 import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
 import { artifacts, ethers, network, run, tenderly } from "hardhat";
 import { EthereumProvider, HttpNetworkConfig } from "hardhat/types";
-
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
 import { createProvider } from "hardhat/internal/core/providers/construction";
+const sfetch = require('sync-fetch')
+
 import { config } from "../hardhat.config";
 import { networkById } from "./networks";
 import { IArtifact, IDeployment, IDeploymentUnit, IVerifiable } from "./types";
 import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
+import { REGISTRY_LATEST_URL, SALTS_URL } from "./constants";
+
+let salts: any;
+export function getSalts() {
+  if (!salts) {
+    salts = sfetch(SALTS_URL).json();
+  }
+  return salts;
+}
+
+let registryLatest: any;
+export function getRegistryLatest() {
+  if (!registryLatest) {
+    registryLatest = sfetch(REGISTRY_LATEST_URL).json();
+  }
+  return registryLatest;
+}
 
 const providers: { [name: string]: EthereumProvider } = {};
 

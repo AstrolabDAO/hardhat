@@ -1,3 +1,4 @@
+import { NETWORKS_URL } from "./constants";
 import { INetwork } from "./types";
 const sfetch = require('sync-fetch')
 
@@ -6,7 +7,7 @@ let [networkById, networkBySlug] = [{}, {}] as [{ [id: number]: INetwork }, { [s
 
 function loadNetworks() {
   try {
-    networks = sfetch('https://cdn.astrolab.fi/data/networks.json').json(); // always updated
+    networks = sfetch(NETWORKS_URL).json(); // always updated
   } catch (e) {
     console.error('Failed to fetch networks from astrolab static server', e);
     networks = require('../networks.json');

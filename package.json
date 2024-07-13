@@ -1,6 +1,6 @@
 {
   "name": "@astrolabs/hardhat",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/AstrolabFinance/hardhat",
@@ -33,6 +33,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@astrolabs/hardhat": "^1.2.8",
     "@nomiclabs/hardhat-ethers": "^2.1.0",
     "@tenderly/hardhat-tenderly": "^1.7.7",
     "dotenv": "^16.3.1",

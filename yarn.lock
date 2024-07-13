@@ -2,6 +2,18 @@
 # yarn lockfile v1
 
 
+"@astrolabs/hardhat@^1.2.8":
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/@astrolabs/hardhat/-/hardhat-1.2.8.tgz#13ed5e8c9d2f8f69d9cff3d3ee4bff18213ce0a7"
+  integrity sha512-axnJ8Gf1v+9Z3uMSR4N2jNi++jf2UHOxFTDZOywAi5hsUwpN7Qez2v4gTprrDhXQHDDNzVGyxN95p8qalw5Bow==
+  dependencies:
+    "@nomiclabs/hardhat-ethers" "^2.1.0"
+    "@tenderly/hardhat-tenderly" "^1.7.7"
+    dotenv "^16.3.1"
+    ethers "^5.7.0"
+    hardhat "^2.10.2"
+    sync-fetch "^0.5.2"
+
 "@chainsafe/as-sha256@^0.3.1":
   version "0.3.1"
   resolved "https://registry.npmjs.org/@chainsafe/as-sha256/-/as-sha256-0.3.1.tgz"
