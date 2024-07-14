@@ -14,6 +14,19 @@
     hardhat "^2.10.2"
     sync-fetch "^0.5.2"
 
+"@astrolabs/hardhat@^1.2.9":
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/@astrolabs/hardhat/-/hardhat-1.2.9.tgz#4e42bb1e6e361084402857b365340891e40911fb"
+  integrity sha512-2ixNk5rES1RdfZI+39JUL3WpYYB7Iu4inQ0q/VteO9tRUczTSTaFcO2NzUzEHR3EslnzNWeih0A5Capc6J1huQ==
+  dependencies:
+    "@astrolabs/hardhat" "^1.2.8"
+    "@nomiclabs/hardhat-ethers" "^2.1.0"
+    "@tenderly/hardhat-tenderly" "^1.7.7"
+    dotenv "^16.3.1"
+    ethers "^5.7.0"
+    hardhat "^2.10.2"
+    sync-fetch "^0.5.2"
+
 "@chainsafe/as-sha256@^0.3.1":
   version "0.3.1"
   resolved "https://registry.npmjs.org/@chainsafe/as-sha256/-/as-sha256-0.3.1.tgz"

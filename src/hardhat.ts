@@ -356,6 +356,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   d.verify ??= true;
   if (d.verify && !d.local) {
     try {
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
       const ok = await verifyContract(d);
       d.verified = true;
     } catch (e) {
