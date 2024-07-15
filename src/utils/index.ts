@@ -1,3 +1,5 @@
+export * from "./fs";
+export * from "./format";
 import { createHash } from "crypto";
 import { ethers, network } from "hardhat";
 const sfetch = require("sync-fetch");
@@ -238,7 +240,7 @@ export async function signerAddressGetter(index: number): Promise<string> {
   return (await signerGetter(index)).address;
 }
 
-export function getAddresses(s: string) {
+export function getAddress(s: string) {
   return isAddress(s) ? s : addresses[network.config.chainId!].tokens[s];
 }
 
