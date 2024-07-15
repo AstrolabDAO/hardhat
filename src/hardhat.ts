@@ -1,18 +1,23 @@
 import { NonceManager } from "@ethersproject/experimental";
 import { setup as tenderlySetup } from "@tenderly/hardhat-tenderly";
-import { BigNumber, Contract, ContractInterface, Signer } from "ethers";
+import { BigNumber, Contract, ContractInterface, Overrides, Signer } from "ethers";
 import { artifacts, ethers, network, run, tenderly } from "hardhat";
 import { EthereumProvider, HttpNetworkConfig } from "hardhat/types";
 import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
 import { createProvider } from "hardhat/internal/core/providers/construction";
+import { Provider as MulticallProvider } from "ethcall";
 const sfetch = require('sync-fetch')
 
 import { config } from "../hardhat.config";
 import { networkById } from "./networks";
-import { IArtifact, IDeployment, IDeploymentUnit, IVerifiable } from "./types";
+import { Addresses, IArtifact, IDeployment, IDeploymentUnit, IVerifiable, NetworkAddresses, SignerWithAddress } from "./types";
 import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
-import { REGISTRY_LATEST_URL, SALTS_URL } from "./constants";
+import { addressZero, REGISTRY_LATEST_URL, SALTS_URL, WETH_ABI } from "./constants";
+import { isLive, getChainlinkFeedsByChainId } from "./utils";
+import addresses, { ITestEnv, SafeContract } from "./addresses";
+import merge from "lodash/merge";
+
 
 let salts: any;
 export function getSalts() {
@@ -39,6 +44,9 @@ const getProvider = async (name: string): Promise<EthereumProvider> => {
   return providers[name];
 };
 
+export const getDeployer = async (): Promise<Signer> =>
+  (await ethers.getSigners())[0];
+
 export async function changeNetwork(slug: string, blockNumber?: number) {
   if (slug.includes("local"))
     return await resetLocalNetwork(slug, "hardhat", blockNumber);
@@ -57,9 +65,6 @@ export async function changeNetwork(slug: string, blockNumber?: number) {
   if (slug.includes("tenderly")) tenderlySetup();
 }
 
-export const getDeployer = async (): Promise<Signer> =>
-  (await ethers.getSigners())[0];
-
 export const revertNetwork = async (snapshotId: any) =>
   await network.provider.send("evm_revert", [snapshotId]);
 
@@ -71,10 +76,10 @@ export const setBalances = async (
   network.name.includes("tenderly")
     ? await ethers.provider.send("tenderly_setBalance", [addresses, hexAmount])
     : await Promise.all(
-        addresses.map((a) =>
-          ethers.provider.send("hardhat_setBalance", [a, hexAmount])
-        )
-      );
+      addresses.map((a) =>
+        ethers.provider.send("hardhat_setBalance", [a, hexAmount])
+      )
+    );
 };
 
 export async function resetLocalNetwork(
@@ -204,15 +209,13 @@ export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
 
   if (saveJson(`${config.paths!.registry}/${outputPath}`, { abi: proxyAbi })) {
     console.log(
-      `Exported ABI for ${d.name} [${d.contract}.sol] to ${
-        config.paths!.registry
+      `Exported ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry
       }/${outputPath}`
     );
     return true;
   }
   console.error(
-    `Failed to export ABI for ${d.name} [${d.contract}.sol] to ${
-      config.paths!.registry
+    `Failed to export ABI for ${d.name} [${d.contract}.sol] to ${config.paths!.registry
     }/${outputPath}`
   );
   return false;
@@ -244,8 +247,7 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
         `Deployment of ${d.name} rejected: marked deployed but no address provided`
       );
     console.log(
-      `Skipping deployment of ${d.name} [${
-        d.contract
+      `Skipping deployment of ${d.name} [${d.contract
       }.sol]: already deployed at ${d.chainId}:${d.address ?? "???"}`
     );
     contract = new Contract(d.address, abi, d.deployer);
@@ -444,8 +446,7 @@ export const saveDeployment = (
   }
   saveJson(path, toSave);
   console.log(
-    `${prevFilename ? "Updated" : "Saved"} ${light ? "light " : ""}deployment ${
-      config.paths!.registry
+    `${prevFilename ? "Updated" : "Saved"} ${light ? "light " : ""}deployment ${config.paths!.registry
     }/deployments/${filename}`
   );
 };
@@ -476,15 +477,13 @@ export const generateContractName = (
   assets: string[],
   chainId?: number
 ): string =>
-  `${contract} ${assets.join("-")}${
-    chainId ? ` ${networkById[chainId].name}` : ""
+  `${contract} ${assets.join("-")}${chainId ? ` ${networkById[chainId].name}` : ""
   }`;
 
 export async function verifyContract(d: IDeploymentUnit) {
   if (!d?.address)
     throw new Error(
-      `Cannot verify contract ${
-        d?.name ?? "?"
+      `Cannot verify contract ${d?.name ?? "?"
       }: no address provided - check if contract was deployed`
     );
 
@@ -533,4 +532,114 @@ export async function verifyContract(d: IDeploymentUnit) {
   }
   d.verified = true;
   return true;
+}
+
+/**
+ * Retrieves the signature of the initialization function for a given contract
+ * @param contract - Contract address or name
+ * @returns The signature of the initialization function
+ */
+export const getInitSignature = async (contract: string) => {
+  const fragments = (await loadAbi(contract) as any[]).filter(
+    a => a.name === "init",
+  );
+  const dummy = new Contract(addressZero, fragments, ethers.provider!);
+  return Object.keys(dummy)
+    .filter((s) => s.startsWith("init"))
+    .sort((s1, s2) => s2.length - s1.length)?.[0];
+};
+
+/**
+ * Completes the given strategy deployment environment
+ * @param env - Strategy deployment environment
+ * @param addressesOverride - Optional addresses override
+ * @returns Completed strategy deployment environment
+ */
+export const getEnv = async (
+  env: Partial<ITestEnv> = {},
+  addressesOverride?: Addresses,
+): Promise<ITestEnv> => {
+  const addr = (addressesOverride ?? addresses)[network.config.chainId!];
+  const oracles = (<any>getChainlinkFeedsByChainId())[network.config.chainId!];
+  const deployer = await getDeployer() as SignerWithAddress;
+  const multicallProvider = new MulticallProvider();
+  await multicallProvider.init(ethers.provider);
+  const live = isLive(env);
+  if (live) env.revertState = false;
+  let snapshotId = 0;
+  try {
+    snapshotId = live ? 0 : await ethers.provider.send("evm_snapshot", []);
+  } catch (e) {
+    console.error(`Failed to snapshot: ${e}`);
+  }
+  env = merge(
+    {
+      network,
+      blockNumber: await ethers.provider.getBlockNumber(),
+      snapshotId,
+      revertState: false,
+      wgas: await SafeContract.build(addr.tokens.WGAS, WETH_ABI, env.deployer!),
+      addresses: addr,
+      oracles,
+      deployer,
+      provider: ethers.provider,
+      multicallProvider,
+      needsFunding: false,
+      gasUsedForFunding: 0, // denominated in wgas decimal
+    },
+    env,
+  );
+  const rpc = (network.config as any)?.forking?.url ?? (network.config as any)?.url ?? "???";
+  console.log(`Live: ${live}\nRpc: ${rpc}`);
+  return env as ITestEnv;
+};
+
+// cf. https://github.com/hujw77/safe-dao-factory/blob/07ae58dc5b9c90e962fe0c436557843987ce448f/src/SafeDaoFactory.sol#L8
+export async function deployMultisig(
+  env: Partial<ITestEnv>,
+  name: string = "Astrolab DAO Council",
+  owners = [env.deployer!.address],
+  threshold = 1,
+  overrides: Overrides = {
+    gasLimit: 2_500_000,
+  },
+): Promise<Contract> {
+  const addr: NetworkAddresses = addresses![network.config.chainId!];
+  const params = {
+    owners,
+    threshold,
+    to: addressZero,
+    data: "0x",
+    fallbackHandler: addr.safe!.compatibilityFallbackHandler,
+    paymentToken: addr.tokens.WGAS,
+    payment: 0,
+    paymentReceiver: addressZero,
+  };
+  const [proxyFactoryAbi, safeAbi] = await Promise.all([loadAbi("SafeProxyFactory"), loadAbi("Safe")]) as any;
+  const proxyFactory = new Contract(addr.safe!.proxyFactory, proxyFactoryAbi, env.deployer!);
+  const creationCode = await proxyFactory.proxyCreationCode();
+  // const create3Bytecode = ethers.utils.hexConcat([
+  //   creationCode,
+  //   ethers.utils.defaultAbiCoder.encode(['address'], [addr.safe!.singletonL2]),
+  // ]);
+  const create3Bytecode = ethers.utils.solidityPack(
+    ['bytes', 'uint256'],
+    [creationCode, BigNumber.from(addr.safe!.singletonL2)],
+  );
+  const salts = getSalts();
+  if (!salts[name]) {
+    throw new Error("Salt not found for " + name);
+  }
+  let safe = await deploy({
+    contract: "Safe", // proxy
+    name,
+    deployer: env.deployer!,
+    overrides,
+    useCreate3: true,
+    create3Salt: salts[name],
+    create3Bytecode,
+  });
+  safe = new Contract(safe.address, safeAbi, env.deployer!);
+  await safe.setup(params);
+  return safe;
 }
