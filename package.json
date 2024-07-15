@@ -1,6 +1,6 @@
 {
   "name": "@astrolabs/hardhat",
-  "version": "1.2.12",
+  "version": "1.2.14",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/AstrolabFinance/hardhat",
@@ -26,6 +26,7 @@
     "@ethersproject/experimental": "^5.7.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@types/lodash": "^4.17.6",
     "@types/mocha": "^10.0.3",
     "mocha": "^10.2.0",
     "mocha-multi": "^1.1.7",
@@ -40,6 +41,7 @@
     "ethcall": "4.8.13",
     "ethers": "^5.7.0",
     "hardhat": "^2.10.2",
+    "lodash": "^4.17.21",
     "sync-fetch": "^0.5.2"
   }
 }
