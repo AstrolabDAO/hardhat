@@ -1,5 +1,4 @@
-import { BigNumber, BigNumberish, BytesLike, Contract, Overrides, Signer, Transaction, Wallet, providers, ethers } from "ethers";
-import { Network } from "hardhat/types";
+import { BigNumber, BigNumberish, BytesLike, Overrides, Signer, Transaction, Wallet } from "ethers";
 
 export interface SignerWithAddress extends Signer {
   address: string;

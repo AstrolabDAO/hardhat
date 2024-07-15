@@ -1,17 +1,18 @@
-import { BigNumber, BigNumberish, BytesLike, Contract, Overrides, Signer, Transaction, Wallet, providers, ethers } from "ethers";
+import {
+  Contract as MulticallContract,
+  Provider as MulticallProvider,
+} from "ethcall";
+import { BigNumber, Contract, ethers, providers } from "ethers";
+import { network } from "hardhat";
+import { Network } from "hardhat/types";
+
 import { ADDRESSES_URL } from "./constants";
 import { getRegistryLatest } from "./hardhat";
 import { networkBySlug } from "./networks";
 import { Addresses, NetworkAddresses, SignerWithAddress } from "./types";
-import {
-  Provider as MulticallProvider,
-  Contract as MulticallContract,
-} from "ethcall";
-import { Network } from "hardhat/types";
-import { network } from "hardhat";
 
-import { getDeployer, loadAbi } from "./hardhat";
 import { ERC20_ABI } from "./constants";
+import { getDeployer } from "./hardhat";
 
 const sfetch = require('sync-fetch')
 
