@@ -1,4 +1,9 @@
-import { BigNumber, BigNumberish, BytesLike, Overrides, Signer, Transaction, Wallet } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Contract, Overrides, Signer, Transaction, Wallet, providers, ethers } from "ethers";
+import { Network } from "hardhat/types";
+
+export interface SignerWithAddress extends Signer {
+  address: string;
+}
 
 export interface IDeployment extends IDeploymentUnit {
   units?: { [unit: string]: IDeploymentUnit };
@@ -174,3 +179,32 @@ export interface IVerifiable {
   constructorArguments?: unknown[];
   libraries?: Record<string, string>;
 }
+
+export type MaybeAwaitable<T> = T | Promise<T>;
+
+export interface Erc20Metadata {
+  name: string;
+  symbol: string;
+  decimals?: number;
+  version?: string;
+}
+
+export type NetworkAddresses = {
+  // common addresses
+  accounts?: { [token: string]: string };
+  oracles?: { [token: string]: string };
+  tokens: { [name: string]: string };
+  libs?: { [name: string]: string };
+  safe?: { [name: string]: string };
+  // protocol specific addresses
+  [protocol: string]: { [name: string]: any } | undefined;
+  astrolab?: {
+    [contract: string]: string;
+    Swapper: string;
+    StrategyV5Agent: string;
+  };
+};
+
+export type Addresses = {
+  [networkId: number]: NetworkAddresses;
+};
