@@ -184,7 +184,7 @@ export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): 
 
 export const isDeployed = (addr: string) => getDeploymentInfo(addr).then((info) => info.isDeployed);
 
-async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3): Promise<IVerificationInfo> {
+export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3): Promise<IVerificationInfo> {
 
   const chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
   const network = networkById[chainId];
