@@ -6,7 +6,9 @@ const sfetch = require("sync-fetch");
 
 import addresses, { ITestEnv } from "../addresses";
 import { CHAINLINK_FEEDS_URL, PYTH_FEEDS_URL } from "../constants";
-import { Log, MaybeAwaitable, SignerWithAddress, TransactionReceipt } from "../types";
+import { IDeploymentInfo, IVerificationInfo, Log, MaybeAwaitable, SignerWithAddress, TransactionReceipt } from "../types";
+import { networkById } from "../networks";
+import { clearNetworkTypeFromSlug } from "./format";
 
 export const arraysEqual = (a: any[], b: any[]) =>
   a === b ||
@@ -15,7 +17,7 @@ export const arraysEqual = (a: any[], b: any[]) =>
 export const duplicatesOnly = (a: any[]) =>
   a.every((v) => v === a[0]);
 
-export function packBy(arr: any[], groupSize=2): any[] {
+export function packBy(arr: any[], groupSize = 2): any[] {
   const pairs = [];
   for (let i = 0; i < arr.length; i += groupSize) {
     pairs.push(arr.slice(i, i + groupSize));
@@ -164,18 +166,64 @@ export function findSignature(signature: string, abi: any[]): string {
   throw new Error(`Function signature ${signature} not found in ABI`);
 }
 
-export async function isDeployed(env: Partial<ITestEnv>, address: string) {
-  if (env.addresses!) {
-    const actual = Object.keys(env.addresses!).find((key) => env.addresses![key]![address]);
-    address = actual ?? address; // if address is an alias, use the actual address
+export function resolveAddress(addr: string, env?: Partial<ITestEnv>): string {
+  if (env?.addresses) {
+    const actual = Object.keys(env.addresses).find((key) => env.addresses?.[key]?.[addr]);
+    addr = actual ?? addr; // if address is an alias, use the actual address
+  }
+  return addr;
+}
+
+export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): Promise<IDeploymentInfo> {
+  await new Promise((r) => setTimeout(r, 100)); // avoids rate limiting when chained
+  const code = await ethers.provider.getCode(resolveAddress(addr, env));
+  const isDeployed = code !== '0x';
+  const byteSize = isDeployed ? (code.length - 2) / 2 : 0; // Subtract 2 for '0x', divide by 2 as each byte is 2 hex chars
+  return { isDeployed, byteSize };
+}
+
+export const isDeployed = (addr: string) => getDeploymentInfo(addr).then((info) => info.isDeployed);
+
+async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3): Promise<IVerificationInfo> {
+
+  const chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
+  const network = networkById[chainId];
+  if (!apiUrl) apiUrl = network.explorerApi!;
+  if (!apiKey) {
+    const slug = clearNetworkTypeFromSlug(network.slug!); // remove "mainnet" or "testnet" from slug
+    apiKey = process.env[`${slug}-scan-api-key`]
+  }
+  if (!apiKey || !apiUrl) {
+    throw new Error(`API key or URL not provided nor available in ENV for ${network.slug} (${chainId})`);
   }
   try {
-    await ethers.provider.getCode(address);
-    return true;
-  } catch (e) {
-    return false;
+    const res = await fetch(`${apiUrl}?module=contract&action=getabi&address=${addr}&apikey=${apiKey}`);
+    const { status, result } = await res.json();
+
+    if (status !== '1' || !result) return { isVerified: false, events: 0, viewFunctions: 0, mutableFunctions: 0 };
+
+    const counts = JSON.parse(result).reduce((acc: IVerificationInfo, { type, mutability }: { type: string, mutability: string }) => {
+      if (type === 'event') acc.events++;
+      else if (type === 'function') {
+        mutability === 'view' || mutability === 'pure' ? acc.viewFunctions++ : acc.mutableFunctions++;
+      }
+      return acc;
+    }, { events: 0, viewFunctions: 0, mutableFunctions: 0 });
+
+    return { isVerified: true, ...counts };
+  } catch (error) {
+    console.error('Verification check error:', error);
+    if (retries > 0) {
+      console.log('Retrying...');
+      await new Promise((r) => setTimeout(r, 150 * (retries ** 2))); // throttle requests to avoid rate limiting
+      return await getVerificationInfo(addr, apiUrl, apiKey, retries--);
+    }
+    return { isVerified: false, events: 0, viewFunctions: 0, mutableFunctions: 0 };
   }
 }
+
+export const isVerified = (addr: string, apiUrl?: string, apiKey?: string, retries?: number) =>
+    getVerificationInfo(addr, apiUrl, apiKey, retries).then((info) => info.isVerified);
 
 /**
  * Converts a given text into a nonce (used for nonce determinism)

@@ -1,5 +1,17 @@
 import { BigNumber, BigNumberish, BytesLike, Overrides, Signer, Transaction, Wallet } from "ethers";
 
+export interface IDeploymentInfo {
+  byteSize: number;
+  isDeployed: boolean;
+}
+
+export interface IVerificationInfo {
+  isVerified: boolean;
+  events: number;
+  viewFunctions: number;
+  mutableFunctions: number;
+}
+
 export interface SignerWithAddress extends Signer {
   address: string;
 }
