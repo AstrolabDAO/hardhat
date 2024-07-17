@@ -9,8 +9,8 @@ import { Provider as MulticallProvider } from "ethcall";
 const sfetch = require('sync-fetch')
 
 import { config } from "../hardhat.config";
-import { networkById } from "./networks";
-import { Addresses, IArtifact, IDeployment, IDeploymentUnit, IVerifiable, NetworkAddresses, SignerWithAddress } from "./types";
+import { networkById, networkBySlug } from "./networks";
+import { Addresses, IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiable, NetworkAddresses, SignerWithAddress } from "./types";
 import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
 import { addressZero, REGISTRY_LATEST_URL, SALTS_URL, WETH_ABI } from "./constants";
@@ -655,8 +655,14 @@ export async function increaseTime(seconds: number, env: ITestEnv) {
   }
 }
 
-export const getNetwork = () => ethers.provider.getNetwork();
-export const getChainId = () => getNetwork().then((n) => n.chainId);
+export const getChainId = () => getHardhatNetwork().then((n) => n.chainId);
+export const getHardhatNetwork = () => ethers.provider.getNetwork();
+export const getNetwork = async (network: INetwork|string|number|undefined): Promise<INetwork> => {
+  network ??= await getHardhatNetwork().then((n) => n.chainId);
+  return typeof network === 'string' ? networkBySlug[network]
+    : typeof network === 'number' ? networkById[network]
+      : network as INetwork;
+}
 export const getChainTimestamp = () => ethers.provider.getBlock("latest").then((b) => b.timestamp);
 export const getBlockNumber = () => ethers.provider.getBlockNumber();
 export const getBlockTimestamp = (blockNumber: number) => ethers.provider.getBlock(blockNumber).then((b) => b.timestamp);

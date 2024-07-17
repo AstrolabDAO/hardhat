@@ -20,16 +20,10 @@ function loadNetworks() {
   return networks;
 }
 
-const getNetwork = (network: INetwork|string|number): INetwork =>
-  typeof network === 'string' ? networkBySlug[network]
-    : typeof network === 'number' ? networkById[network]
-      : network;
-
 loadNetworks();
 
 export {
   networks,
   networkById,
-  networkBySlug,
-  getNetwork,
+  networkBySlug
 }
