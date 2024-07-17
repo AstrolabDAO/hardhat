@@ -8,6 +8,7 @@ import { HardhatConfig, NetworksConfig, ProjectPathsConfig, SolidityConfig } fro
 import { INetwork } from "./src/types";
 import { networks } from "./src/networks";
 import { clearNetworkTypeFromSlug } from "./src/utils/format";
+import tenderlySlugByChainId from "./tenderly-slug-by-id.json";
 
 dotenv.config({ override: true });
 tenderly.setup({ automaticVerifications: false });
@@ -78,7 +79,7 @@ const [hhNetworks, scanKeys] = networks
       // check for known tenderly fork (persistent) in .env in addition to the local fork
       const forkId = process.env[`${slug}-tenderly-fork-id`];
       if (forkId && Number(process.env.TENDERLY_CHAIN_ID) == network.id) {
-        let tenderlyChainSlug = slug;
+        let tenderlyChainSlug = (<any>tenderlySlugByChainId)[network.id.toString()] ?? slug;
         switch (slug) {
           case "binance": tenderlyChainSlug = "bnb-chain"; break;
           case "gnosis": tenderlyChainSlug = "gnosis-chain"; break;
