@@ -6,8 +6,8 @@ const sfetch = require("sync-fetch");
 
 import addresses, { ITestEnv } from "../addresses";
 import { CHAINLINK_FEEDS_URL, PYTH_FEEDS_URL } from "../constants";
-import { IDeploymentInfo, IVerificationInfo, Log, MaybeAwaitable, SignerWithAddress, TransactionReceipt } from "../types";
-import { networkById } from "../networks";
+import { IDeploymentInfo, INetwork, IVerificationInfo, Log, MaybeAwaitable, SignerWithAddress, TransactionReceipt } from "../types";
+import { networkById, networkBySlug } from "../networks";
 import { clearNetworkTypeFromSlug } from "./format";
 
 export const arraysEqual = (a: any[], b: any[]) =>
@@ -166,17 +166,32 @@ export function findSignature(signature: string, abi: any[]): string {
   throw new Error(`Function signature ${signature} not found in ABI`);
 }
 
-export function resolveAddress(addr: string, env?: Partial<ITestEnv>): string {
-  if (env?.addresses) {
-    const actual = Object.keys(env.addresses).find((key) => env.addresses?.[key]?.[addr]);
-    addr = actual ?? addr; // if address is an alias, use the actual address
+export async function resolveAddress(addr: string, env?: Partial<ITestEnv>): Promise<string> {
+  if (!addr) {
+    throw new Error('Address missing to resolve');
   }
-  return addr;
+  if (isAddress(addr)) {
+    return addr;
+  }
+  if (env?.addresses) {
+    const fromRegistry =
+      env.addresses.tokens?.[addr] ??
+      env.addresses.libs?.[addr] ??
+      env.addresses.astrolab?.[addr];
+    if (fromRegistry) {
+      return fromRegistry;
+    }
+  }
+  const fromEns = await ethers.provider.resolveName(addr);
+  if (!fromEns) {
+    throw new Error(`Could not resolve address ${addr} (tried Astrolab registry and ENS).`);
+  }
+  return fromEns;
 }
 
 export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): Promise<IDeploymentInfo> {
   await new Promise((r) => setTimeout(r, 100)); // avoids rate limiting when chained
-  const code = await ethers.provider.getCode(resolveAddress(addr, env));
+  const code = await ethers.provider.getCode(await resolveAddress(addr, env));
   const isDeployed = code !== '0x';
   const byteSize = isDeployed ? (code.length - 2) / 2 : 0; // Subtract 2 for '0x', divide by 2 as each byte is 2 hex chars
   return { isDeployed, byteSize };
@@ -186,7 +201,7 @@ export const isDeployed = (addr: string, env?: Partial<ITestEnv>) => getDeployme
 
 export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3, env?: Partial<ITestEnv>): Promise<IVerificationInfo> {
 
-  addr = resolveAddress(addr, env);
+  addr = await resolveAddress(addr, env);
   const chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
   const network = networkById[chainId];
   if (!apiUrl) apiUrl = network.explorerApi!;
@@ -289,10 +304,6 @@ export async function signerAddressGetter(index: number): Promise<string> {
   return (await signerGetter(index)).address;
 }
 
-export function getAddress(s: string) {
-  return isAddress(s) ? s : addresses[network.config.chainId!].tokens[s];
-}
-
 export function getSelectors(abi: any) {
   const i = new ethers.utils.Interface(abi);
   return Object.keys(i.functions).map((signature) => ({
@@ -300,3 +311,28 @@ export function getSelectors(abi: any) {
     signature: i.getSighash(i.functions[signature]),
   }));
 }
+
+export async function increaseTime(seconds: number, env: ITestEnv) {
+  await env.provider.send("evm_increaseTime", [
+    ethers.utils.hexValue(seconds),
+  ]);
+  if (env.network.name.includes("tenderly")) {
+    await env.provider.send("evm_increaseBlocks", ["0x20"]); // tenderly
+  } else {
+    await env.provider.send("evm_mine", []); // ganache/local fork
+  }
+}
+
+export const getChainId = () => getHardhatNetwork().then((n) => n.chainId);
+export const getHardhatNetwork = () => ethers.provider.getNetwork();
+export const getNetwork = async (network: INetwork|string|number|undefined): Promise<INetwork> => {
+  network ??= await getHardhatNetwork().then((n) => n.chainId);
+  return typeof network === 'string' ? networkBySlug[network]
+    : typeof network === 'number' ? networkById[network]
+      : network as INetwork;
+}
+export const getNetworkTimestamp = () => ethers.provider.getBlock("latest").then((b) => b.timestamp);
+export const getBlockNumber = () => ethers.provider.getBlockNumber();
+export const getBlockTimestamp = (blockNumber: number) => ethers.provider.getBlock(blockNumber).then((b) => b.timestamp);
+export const isTenderly = () => network.name.includes("tenderly");
+export const isHardhat = () => network.config.chainId == 31337 || network.name.includes("hardhat");

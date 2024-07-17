@@ -14,7 +14,7 @@ import { Addresses, IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiab
 import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
 import { addressZero, REGISTRY_LATEST_URL, SALTS_URL, WETH_ABI } from "./constants";
-import { isLive, getChainlinkFeedsByChainId } from "./utils";
+import { isLive, getChainlinkFeedsByChainId, isDeployed, isVerified, isTenderly } from "./utils";
 import addresses, { ITestEnv, SafeContract } from "./addresses";
 import merge from "lodash/merge";
 
@@ -240,7 +240,9 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
   if (d.address) d.deployed = true;
 
   const abi = (await loadAbi(d.contract) as any[]) ?? [];
-
+  if (d.address && await isDeployed(d.address)) {
+    d.deployed = true;
+  }
   if (d.deployed) {
     if (!d.address)
       throw new Error(
@@ -356,7 +358,10 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     console.log(`Successfully deployed ${d.name} at ${d.address} ✅`);
   }
   d.verify ??= true;
-  if (d.verify && !d.local) {
+  if (!d.deployed && isTenderly() || await isVerified(d.address)) {
+    d.verified = true;
+  }
+  if (d.verify && !d.verified && !d.local) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 5_000));
       const ok = await verifyContract(d);
@@ -487,7 +492,7 @@ export async function verifyContract(d: IDeploymentUnit) {
       }: no address provided - check if contract was deployed`
     );
 
-  if (d.local) {
+  if (d.local || isTenderly()) {
     console.log("Skipping verification for local deployment");
     return;
   }
@@ -643,26 +648,3 @@ export async function deployMultisig(
   await safe.setup(params);
   return safe;
 }
-
-export async function increaseTime(seconds: number, env: ITestEnv) {
-  await env.provider.send("evm_increaseTime", [
-    ethers.utils.hexValue(seconds),
-  ]);
-  if (env.network.name.includes("tenderly")) {
-    await env.provider.send("evm_increaseBlocks", ["0x20"]); // tenderly
-  } else {
-    await env.provider.send("evm_mine", []); // ganache/local fork
-  }
-}
-
-export const getChainId = () => getHardhatNetwork().then((n) => n.chainId);
-export const getHardhatNetwork = () => ethers.provider.getNetwork();
-export const getNetwork = async (network: INetwork|string|number|undefined): Promise<INetwork> => {
-  network ??= await getHardhatNetwork().then((n) => n.chainId);
-  return typeof network === 'string' ? networkBySlug[network]
-    : typeof network === 'number' ? networkById[network]
-      : network as INetwork;
-}
-export const getChainTimestamp = () => ethers.provider.getBlock("latest").then((b) => b.timestamp);
-export const getBlockNumber = () => ethers.provider.getBlockNumber();
-export const getBlockTimestamp = (blockNumber: number) => ethers.provider.getBlock(blockNumber).then((b) => b.timestamp);
