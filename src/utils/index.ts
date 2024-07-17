@@ -182,10 +182,11 @@ export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): 
   return { isDeployed, byteSize };
 }
 
-export const isDeployed = (addr: string) => getDeploymentInfo(addr).then((info) => info.isDeployed);
+export const isDeployed = (addr: string, env?: Partial<ITestEnv>) => getDeploymentInfo(addr, env).then((info) => info.isDeployed);
 
-export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3): Promise<IVerificationInfo> {
+export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3, env?: Partial<ITestEnv>): Promise<IVerificationInfo> {
 
+  addr = resolveAddress(addr, env);
   const chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
   const network = networkById[chainId];
   if (!apiUrl) apiUrl = network.explorerApi!;
@@ -222,8 +223,8 @@ export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?
   }
 }
 
-export const isVerified = (addr: string, apiUrl?: string, apiKey?: string, retries?: number) =>
-    getVerificationInfo(addr, apiUrl, apiKey, retries).then((info) => info.isVerified);
+export const isVerified = (addr: string, apiUrl?: string, apiKey?: string, retries?: number, env?: Partial<ITestEnv>) =>
+    getVerificationInfo(addr, apiUrl, apiKey, retries, env).then((info) => info.isVerified);
 
 /**
  * Converts a given text into a nonce (used for nonce determinism)

@@ -643,3 +643,20 @@ export async function deployMultisig(
   await safe.setup(params);
   return safe;
 }
+
+export async function increaseTime(seconds: number, env: ITestEnv) {
+  await env.provider.send("evm_increaseTime", [
+    ethers.utils.hexValue(seconds),
+  ]);
+  if (env.network.name.includes("tenderly")) {
+    await env.provider.send("evm_increaseBlocks", ["0x20"]); // tenderly
+  } else {
+    await env.provider.send("evm_mine", []); // ganache/local fork
+  }
+}
+
+export const getNetwork = () => ethers.provider.getNetwork();
+export const getChainId = () => getNetwork().then((n) => n.chainId);
+export const getChainTimestamp = () => ethers.provider.getBlock("latest").then((b) => b.timestamp);
+export const getBlockNumber = () => ethers.provider.getBlockNumber();
+export const getBlockTimestamp = (blockNumber: number) => ethers.provider.getBlock(blockNumber).then((b) => b.timestamp);
