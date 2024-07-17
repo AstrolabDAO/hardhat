@@ -80,11 +80,6 @@ const [hhNetworks, scanKeys] = networks
       const forkId = process.env[`${slug}-tenderly-fork-id`];
       if (forkId && Number(process.env.TENDERLY_CHAIN_ID) == network.id) {
         let tenderlyChainSlug = (<any>tenderlySlugByChainId)[network.id.toString()] ?? slug;
-        switch (slug) {
-          case "binance": tenderlyChainSlug = "bnb-chain"; break;
-          case "gnosis": tenderlyChainSlug = "gnosis-chain"; break;
-        }
-        // TODO: add support for tenderly devNets
         networks[`tenderly`] = {
           network: `tenderly`,
           url: tenderlyMode == "fork" ? `https://rpc.tenderly.co/fork/${forkId}` : `https://virtual.${tenderlyChainSlug}.rpc.tenderly.co/${forkId}`,
