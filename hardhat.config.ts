@@ -11,7 +11,7 @@ import { clearNetworkTypeFromSlug } from "./src/utils/format";
 import tenderlySlugByChainId from "./tenderly-slug-by-id.json";
 
 dotenv.config({ override: true });
-tenderly.setup({ automaticVerifications: false });
+tenderly.setup({ automaticVerifications: true });
 
 const [mnemonic, pkeys] = [process.env?.TEST_MNEMONIC, process.env?.TEST_PKEYS?.split(",")];
 if (!mnemonic && !pkeys) {
