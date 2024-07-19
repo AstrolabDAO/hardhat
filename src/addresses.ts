@@ -32,7 +32,8 @@ export const crossChainAddresses = {
 
 const symbolByAddress: { [chainId: number]: { [address: string]: string } } = {};
 
-export function findSymbolByAddress(address: string, chainId: number): string | undefined {
+export function findSymbolByAddress(address: string, chainId?: number): string | undefined {
+  chainId ??= network.config.chainId!;
   const networkAddresses = addresses[chainId];
   if (!networkAddresses) {
     console.log(`Network with chainId ${chainId} is not supported.`);
