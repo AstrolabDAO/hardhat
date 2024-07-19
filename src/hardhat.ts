@@ -358,9 +358,6 @@ export async function deploy(d: IDeploymentUnit): Promise<Contract> {
     console.log(`Successfully deployed ${d.name} at ${d.address} ✅`);
   }
   d.verify ??= true;
-  if (!d.deployed && isTenderly() || await isVerified(d.address)) {
-    d.verified = true;
-  }
   if (d.verify && !d.verified && !d.local) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 5_000));
@@ -492,15 +489,15 @@ export async function verifyContract(d: IDeploymentUnit) {
       }: no address provided - check if contract was deployed`
     );
 
-  if (d.local || isTenderly()) {
+  if (d.local) {
     console.log("Skipping verification for local deployment");
     return;
   }
 
-  // if (d.verified || await isAlreadyVerified(d)) {
-  //   console.log(`Skipping verification for ${d.name}: already verified`);
-  //   return;
-  // }
+  if (d.verified || (!isTenderly() && await isVerified(d.address))) {
+    console.log(`Skipping verification for ${d.name}: already verified`);
+    return;
+  }
 
   const args: IVerifiable = {
     name: d.contract,

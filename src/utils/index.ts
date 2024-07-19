@@ -276,7 +276,7 @@ export const getPythFeeds = () => {
 
 export function isLive(env: any) {
   const n = env.network ?? network;
-  return !["tenderly", "localhost", "hardhat"].some((s) => n?.name.includes(s));
+  return !["tenderly", "localhost", "hardhat", "testnet"].some((s) => n?.name.toLowerCase().includes(s));
 }
 
 export function isAddress(s: string) {
