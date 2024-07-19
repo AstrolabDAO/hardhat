@@ -200,10 +200,23 @@ export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): 
   if (!addr) {
     return { isDeployed: false, byteSize: 0 };
   }
-  const code = await ethers.provider.getCode(addr);
-  const isDeployed = code !== '0x';
-  const byteSize = isDeployed ? (code.length - 2) / 2 : 0; // Subtract 2 for '0x', divide by 2 as each byte is 2 hex chars
-  return { isDeployed, byteSize };
+  let provider = ethers.provider;
+  if (isLocal()) {
+    const forkedRpc = (env!.network?.config as any)?.forking?.url;
+    provider =  new ethers.providers.JsonRpcProvider(forkedRpc);
+  }
+  try {
+    const code = await provider.getCode(addr);
+    const isDeployed = code !== "0x";
+    const byteSize = isDeployed ? (code.length - 2) / 2 : 0; // Subtract 2 for "0x", divide by 2 as each byte is 2 hex chars
+    return { isDeployed, byteSize };
+  } catch (e) {
+    if ((e as any).toString().includes("issing trie node")) {
+      console.warn(`Provided RPC is not an archive node, cannot retrieve code for ${addr}`);
+      return { isDeployed: false, byteSize: 0 };
+    }
+    throw e;
+  }
 }
 
 export const isDeployed = (addr: string, env?: Partial<ITestEnv>) => getDeploymentInfo(addr, env).then((info) => info.isDeployed);
@@ -286,11 +299,6 @@ export const getPythFeeds = () => {
   return pythFeeds;
 }
 
-export function isLive(env: any) {
-  const n = env.network ?? network;
-  return !["tenderly", "localhost", "hardhat", "testnet"].some((s) => n?.name.toLowerCase().includes(s));
-}
-
 export function isAddress(s: string) {
   return /^0x[a-fA-F0-9]{40}$/.test(s);
 }
@@ -348,3 +356,13 @@ export const getBlockNumber = () => ethers.provider.getBlockNumber();
 export const getBlockTimestamp = (blockNumber: number) => ethers.provider.getBlock(blockNumber).then((b) => b.timestamp);
 export const isTenderly = () => network.name.includes("tenderly");
 export const isHardhat = () => network.config.chainId == 31337 || network.name.includes("hardhat");
+export const isLive = (env: any) =>
+  !["tenderly", "localhost", "hardhat", "testnet"].some((s) =>
+      (env.network ?? network)?.name.toLowerCase().includes(s));
+export const isLocal = () => {
+  const networkName = (network.config as any)?.network ?? network.name;
+  return (
+    network.config.chainId == 31337 ||
+    ["local", "hardhat"].some((n) => networkName.includes(n))
+  );
+};

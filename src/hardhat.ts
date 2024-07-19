@@ -14,7 +14,7 @@ import { Addresses, IArtifact, IDeployment, IDeploymentUnit, INetwork, IVerifiab
 import { abiFragmentSignature, nowEpochUtc, slugify } from "./utils/format";
 import { getLatestFileName, loadJson, loadLatestJson, saveJson } from "./utils/fs";
 import { addressZero, REGISTRY_LATEST_URL, SALTS_URL, WETH_ABI } from "./constants";
-import { isLive, getChainlinkFeedsByChainId, isDeployed, isVerified, isTenderly } from "./utils";
+import { isLive, getChainlinkFeedsByChainId, isDeployed, isVerified, isTenderly, isLocal } from "./utils";
 import addresses, { ITestEnv, SafeContract } from "./addresses";
 import merge from "lodash/merge";
 
@@ -219,14 +219,6 @@ export const exportAbi = async (d: IDeploymentUnit): Promise<boolean> => {
     }/${outputPath}`
   );
   return false;
-};
-
-const isLocal = () => {
-  const networkName = (network.config as any)?.network ?? network.name;
-  return (
-    network.config.chainId == 31337 ||
-    ["local", "hardhat"].some((n) => networkName.includes(n))
-  );
 };
 
 export async function deploy(d: IDeploymentUnit): Promise<Contract> {
