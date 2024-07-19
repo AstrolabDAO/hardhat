@@ -182,16 +182,25 @@ export async function resolveAddress(addr: string, env?: Partial<ITestEnv>): Pro
       return fromRegistry;
     }
   }
-  const fromEns = await ethers.provider.resolveName(addr);
-  if (!fromEns) {
-    throw new Error(`Could not resolve address ${addr} (tried Astrolab registry and ENS).`);
+  try {
+    const fromEns = await ethers.provider.resolveName(addr);
+    if (fromEns) {
+      return fromEns;
+    }
+  } catch (e) {
+    console.error(e);
   }
-  return fromEns;
+  console.error(`Could not resolve address ${addr} (tried Astrolab registry and ENS).`);
+  return "";
 }
 
 export async function getDeploymentInfo(addr: string, env?: Partial<ITestEnv>): Promise<IDeploymentInfo> {
   await new Promise((r) => setTimeout(r, 100)); // avoids rate limiting when chained
-  const code = await ethers.provider.getCode(await resolveAddress(addr, env));
+  addr = await resolveAddress(addr, env);
+  if (!addr) {
+    return { isDeployed: false, byteSize: 0 };
+  }
+  const code = await ethers.provider.getCode(addr);
   const isDeployed = code !== '0x';
   const byteSize = isDeployed ? (code.length - 2) / 2 : 0; // Subtract 2 for '0x', divide by 2 as each byte is 2 hex chars
   return { isDeployed, byteSize };
@@ -202,6 +211,9 @@ export const isDeployed = (addr: string, env?: Partial<ITestEnv>) => getDeployme
 export async function getVerificationInfo(addr: string, apiUrl?: string, apiKey?: string, retries = 3, env?: Partial<ITestEnv>): Promise<IVerificationInfo> {
 
   addr = await resolveAddress(addr, env);
+  if (!addr) {
+    return { isVerified: false, events: 0, viewFunctions: 0, mutableFunctions: 0 };
+  }
   const chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
   const network = networkById[chainId];
   if (!apiUrl) apiUrl = network.explorerApi!;
